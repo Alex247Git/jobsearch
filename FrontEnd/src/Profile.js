@@ -22,7 +22,9 @@ function Profile({ user }) {
 
         const fetchUserData = async () => {
             try {
-                const userRes = await fetch(`http://localhost:5000/users/${viewedUserId}`);
+                const userRes = await fetch(`http://localhost:5000/users/${viewedUserId}`, {
+                    headers: { Authorization: `Bearer ${user.token}` },
+                });
                 if (!userRes.ok) throw new Error("Failed to fetch user data");
                 const userJson = await userRes.json();
                 setUserData(userJson);
@@ -58,7 +60,10 @@ function Profile({ user }) {
         try {
             const response = await fetch(`http://localhost:5000/profiles/${viewedUserId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.token}`
+                },
                 body: JSON.stringify(formData)
             });
             if (!response.ok) throw new Error("Failed to update profile");

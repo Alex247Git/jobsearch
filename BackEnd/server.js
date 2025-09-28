@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
 const cors = require('cors');
 const userRoutes = require('./routes/users');
 const db = require('./db');
@@ -20,8 +21,11 @@ const http = require('http');
 const initializeSocket = require('./socket');
 
 
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'not set');
+console.log('DB_NAME:', process.env.DB_NAME);
 
-dotenv.config();
 const app = express();
 
 app.use(express.json());
@@ -37,14 +41,6 @@ initializeSocket(server, db);
 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Error while connecting to database:', err);
-        return;
-    }
-    console.log('Connected to database.');
 });
 
 app.use('/users', userRoutes);

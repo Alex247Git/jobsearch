@@ -59,10 +59,6 @@ router.get("/conversations/:user_id", async (req, res) => {
     try {
         const [results] = await db.promise().query(query, [user_id, user_id, user_id]);
 
-        if (results.length === 0) {
-            return res.status(404).json({ error: "No conversations found" });
-        }
-
         res.status(200).json(results);
     } catch (err) {
         console.error("Error fetching conversations:", err);

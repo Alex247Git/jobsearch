@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { generateJobRecommendations } = require('../recommendationSystem');
+const { generateJobRecommendations } = require('../recommendationSystemNew');
 
 // POST candidate
 router.post('/', async (req, res) => {

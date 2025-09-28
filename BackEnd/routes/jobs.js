@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const nlp = require('compromise');
-const { generateCandidateRecommendations } = require('../recommendationSystem');
+const { generateCandidateRecommendations } = require('../recommendationSystemNew');
 
 // POST new job
 router.post('/', async (req, res) => {
@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
         const [result] = await db.promise().query(query, [title, company_id, location, description, salary, skills_required, job_type, remote_option, category]);
         const newJobId = result.insertId;
         await db.promise().query(`DELETE FROM recommendations WHERE job_id = ? AND recommendation_type = 'candidate'`, [newJobId]);
-        await generateCandidateRecommendations(result.insertId);
+        generateCandidateRecommendations(result.insertId).catch(err => console.error('Failed to generate candidate recommendations for job', result.insertId, err));
         res.status(201).json({ message: 'Job created successfully', jobId: result.insertId });
     } catch (err) {
         console.error('Error creating job:', err.message);
