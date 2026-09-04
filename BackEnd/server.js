@@ -34,10 +34,6 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initializeSocket(server, db);
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-
 app.use('/users', userRoutes);
 app.use('/candidates', candidatesRouter);
 app.use('/companies', companiesRouter);
@@ -52,5 +48,9 @@ app.use('/saved_jobs', savedJobsRouter);
 app.use('/search_history', searchHistoryRouter);
 app.use('/applications', applicationsRouter);
 app.use('/employed', employedRouter);
+
+server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
 
 module.exports = app;
