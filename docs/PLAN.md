@@ -12,7 +12,7 @@ are the safety net.
       Step3EmployerForm, Step4JobPostForm + index orchestrator)
 - [x] Phase 2: Split Jobs.js (712 -> ~500) into Jobs/ folder
       (JobFilters, JobCard, MessageDialog + index orchestrator)
-- [ ] Phase 3: Behaviour tests for the new components (JobFilters, JobCard,
+- [x] Phase 3: Behaviour tests for the new components (JobFilters, JobCard,
       MessageDialog) with mock props/callbacks.
 - [ ] Phase 4: PR #3 -> merge -> delete branches.
 
