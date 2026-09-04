@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 export const registerUser = async (userData, step) => {
     try {
@@ -14,7 +14,7 @@ export const registerUser = async (userData, step) => {
                 role: userData.role
             };
 
-            const userRes = await fetch(`${API_BASE_URL}/users`, {
+            const userRes = await apiFetch(`/users`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userPayload)
@@ -40,7 +40,7 @@ export const registerUser = async (userData, step) => {
                 website: userData.website
             };
 
-            const profileRes = await fetch(`${API_BASE_URL}/profiles`, {
+            const profileRes = await apiFetch(`/profiles`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(profilePayload)
@@ -58,7 +58,7 @@ export const registerUser = async (userData, step) => {
                 location: userData.company_location,
                 description: userData.description
             };
-            const companyRes = await fetch(`${API_BASE_URL}/companies`, {
+            const companyRes = await apiFetch(`/companies`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(companyPayload)
@@ -99,7 +99,7 @@ export const registerUser = async (userData, step) => {
 
             console.log('🚀 Job payload to send:', jobPayload);
 
-            const jobRes = await fetch(`${API_BASE_URL}/jobs`, {
+            const jobRes = await apiFetch(`/jobs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(jobPayload)

@@ -1,8 +1,8 @@
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 const postJob = async (jobData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/jobs`, {
+        const response = await apiFetch(`/jobs`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

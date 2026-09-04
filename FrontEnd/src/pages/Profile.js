@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./Profile.css";
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function Profile({ user }) {
     const { userId: paramUserId } = useParams();
@@ -23,7 +23,7 @@ function Profile({ user }) {
 
         const fetchUserData = async () => {
             try {
-                const userRes = await fetch(`${API_BASE_URL}/users/${viewedUserId}`, {
+                const userRes = await apiFetch(`/users/${viewedUserId}`, {
                     headers: { Authorization: `Bearer ${user.token}` },
                 });
                 if (!userRes.ok) throw new Error("Failed to fetch user data");
@@ -36,7 +36,7 @@ function Profile({ user }) {
 
         const fetchProfileData = async () => {
             try {
-                const profileRes = await fetch(`${API_BASE_URL}/profiles/${viewedUserId}`);
+                const profileRes = await apiFetch(`/profiles/${viewedUserId}`);
                 if (!profileRes.ok) throw new Error("Failed to fetch profile");
                 const profileJson = await profileRes.json();
                 setProfile(profileJson);
@@ -50,7 +50,7 @@ function Profile({ user }) {
 
         fetchUserData();
         fetchProfileData();
-    }, [viewedUserId]);
+    }, [viewedUserId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -59,7 +59,7 @@ function Profile({ user }) {
 
     const handleSave = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/profiles/${viewedUserId}`, {
+            const response = await apiFetch(`/profiles/${viewedUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -68,7 +68,6 @@ function Profile({ user }) {
                 body: JSON.stringify(formData)
             });
             if (!response.ok) throw new Error("Failed to update profile");
-            const updated = await response.json();
             setProfile({ ...profile, ...formData });
             setIsEditing(false);
         } catch (err) {

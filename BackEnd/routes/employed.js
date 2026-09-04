@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // Create a new employed record
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
     const { user_id, job_id, employer_id, employment_start_date, employment_end_date, salary, employment_status, notes } = req.body;
 
     if (!user_id || !job_id || !employer_id || !employment_start_date || !employment_status) {
@@ -24,7 +25,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get employment records for a specific user with employer and job details
-router.get("/:user_id", async (req, res) => {
+router.get("/:user_id", authenticateToken, async (req, res) => {
     const { user_id } = req.params;
 
     try {
@@ -73,7 +74,7 @@ router.get("/:user_id", async (req, res) => {
 });
 
 // GET /employed/employer/:employerId
-router.get('/employer/:employerId', async (req, res) => {
+router.get('/employer/:employerId', authenticateToken, async (req, res) => {
     const { employerId } = req.params;
 
     try {
@@ -95,7 +96,7 @@ router.get('/employer/:employerId', async (req, res) => {
 });
 
 // Update an employment record
-router.put("/:employed_id", async (req, res) => {
+router.put("/:employed_id", authenticateToken, async (req, res) => {
     const { employed_id } = req.params;
     const { employment_end_date, salary, employment_status, notes } = req.body;
 
@@ -120,7 +121,7 @@ router.put("/:employed_id", async (req, res) => {
     }
 });
 
-router.delete('/leavejob/:user_id', async (req, res) => {
+router.delete('/leavejob/:user_id', authenticateToken, async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
@@ -163,7 +164,7 @@ router.delete('/leavejob/:user_id', async (req, res) => {
 });
 
 // Delete an employment record
-router.delete("/:employed_id", async (req, res) => {
+router.delete("/:employed_id", authenticateToken, async (req, res) => {
     const { employed_id } = req.params;
     try {
         const [result] = await db.promise().execute("DELETE FROM employed WHERE employed_id = ?", [employed_id]);

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 const Rating = ({ user }) => {
     const { companyId } = useParams();   
@@ -19,7 +19,7 @@ const Rating = ({ user }) => {
         const user_id = user?.user_id;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/ratings`, {
+            const response = await apiFetch(`/ratings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const { authenticateToken } = require('../middleware/auth');
 
-router.get("/jobs/:candidate_id", async (req, res) => {
+router.get("/jobs/:candidate_id", authenticateToken, async (req, res) => {
     const candidate_id = parseInt(req.params.candidate_id);
     const limit = parseInt(req.query.limit) || 10;
     const offset = parseInt(req.query.offset) || 0;
@@ -41,7 +42,7 @@ router.get("/jobs/:candidate_id", async (req, res) => {
     }
 });
 
-router.get('/candidates/:userId', (req, res) => {
+router.get('/candidates/:userId', authenticateToken, (req, res) => {
     const userId = parseInt(req.params.userId);
     const jobId = req.query.job_id ? parseInt(req.query.job_id) : null;
     const limit = parseInt(req.query.limit) || 10;
@@ -78,7 +79,7 @@ router.get('/candidates/:userId', (req, res) => {
 });
 
 // ✅ PUT - Update recommendation score
-router.put("/:recommendation_id", async (req, res) => {
+router.put("/:recommendation_id", authenticateToken, async (req, res) => {
     const { recommendation_id } = req.params;
     const { score } = req.body;
 
@@ -99,7 +100,7 @@ router.put("/:recommendation_id", async (req, res) => {
 });
 
 // ✅ DELETE - Remove recommendation
-router.delete("/:recommendation_id", async (req, res) => {
+router.delete("/:recommendation_id", authenticateToken, async (req, res) => {
     const { recommendation_id } = req.params;
 
     try {

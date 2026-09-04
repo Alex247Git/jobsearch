@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { generateJobRecommendations } = require('../recommendationSystemNew');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST candidate
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { user_id, cover_letter, availability } = req.body;
     if (!user_id || !cover_letter || availability == null) {
         return res.status(400).json({ error: 'Please provide all required fields except application_id' });
@@ -77,7 +78,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // UPDATE candidate by id
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     const candidateId = req.params.id;
     const { cover_letter, application_id, availability } = req.body;
 
@@ -122,7 +123,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE candidate by id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     const candidateId = req.params.id;
 
     try {

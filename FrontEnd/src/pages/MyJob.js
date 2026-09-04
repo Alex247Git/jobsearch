@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import './MyJob.css';
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function MyJob({ user }) {
     const [jobInfo, setJobInfo] = useState(null);
@@ -12,7 +12,7 @@ function MyJob({ user }) {
     useEffect(() => {
         if (!user?.user_id) return;
 
-        fetch(`${API_BASE_URL}/employed/${user.user_id}`)
+        apiFetch(`/employed/${user.user_id}`)
             .then((res) => res.json())
             .then((data) => setJobInfo(data))
             .catch((err) => console.error("Error fetching job info:", err));
@@ -29,7 +29,7 @@ function MyJob({ user }) {
             alert("Please provide all required fields.");
             return;
         }
-        fetch(`${API_BASE_URL}/company_ratings`, {
+        apiFetch(`/company_ratings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ function MyJob({ user }) {
     const handleLeaveJob = () => {
         if (!window.confirm("Are you sure you want to leave this job?")) return;
 
-        fetch(`${API_BASE_URL}/employed/leavejob/${user.user_id}`, {
+        apiFetch(`/employed/leavejob/${user.user_id}`, {
             method: 'DELETE',
         })
             .then((res) => {
@@ -74,10 +74,6 @@ function MyJob({ user }) {
         if (!data) return "N/A";
         if (typeof data === 'string') data = data.split(',');
         return Array.isArray(data) ? data.join(', ') : data;
-    };
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString();
     };
 
     if (!jobInfo) {

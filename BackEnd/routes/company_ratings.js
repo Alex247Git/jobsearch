@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST new rating for company
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { user_id, company_id, rating, comment } = req.body;
 
     if (!user_id || !company_id || rating === undefined) {
@@ -88,7 +89,7 @@ router.get('/company/:companyId', async (req, res) => {
 });
 
 // UPDATE rating by rating_id
-router.put('/:ratingId', async (req, res) => {
+router.put('/:ratingId', authenticateToken, async (req, res) => {
     const ratingId = req.params.ratingId;
     const { rating, comment } = req.body;
 
@@ -129,7 +130,7 @@ router.put('/:ratingId', async (req, res) => {
 });
 
 // DELETE rating by rating_id
-router.delete('/:ratingId', async (req, res) => {
+router.delete('/:ratingId', authenticateToken, async (req, res) => {
     const ratingId = req.params.ratingId;
 
     try {
