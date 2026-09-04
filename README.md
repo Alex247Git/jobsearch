@@ -1,5 +1,25 @@
 # jobsearch
 
+Job search platform: React (CRA) frontend + Express backend + MySQL (Podman).
+
+## Project structure
+
+```
+BackEnd/            Express server, routes/, recommendation engine, socket.io
+FrontEnd/
+  src/
+    api.js          Central API base URL (REACT_APP_API_URL)
+    pages/          Route components (Home, Jobs, Register, Login, ...)
+    components/     Shared components (Navbar, Header, Footer, Rating)
+    context/        AuthContext
+    services/       socket, JobController, RegisterController
+  scripts/          Dev utilities (extractRoutes.js)
+```
+
+## Environment variables
+
+Copy `.env.example` to `.env` and fill in the values (backend + frontend).
+
 ## MySQL in WSL (Podman)
 
 The full stack (React + Express + MySQL) runs inside WSL. MySQL lives in a rootless Podman container:
