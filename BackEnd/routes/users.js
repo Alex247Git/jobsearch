@@ -22,6 +22,9 @@ router.post('/', async (req, res) => {
     if (!first_name || !last_name || !email || !password || !date_of_birth || !phone_number || is_verified === undefined || !role) {
         return res.status(400).json({ error: 'Please provide all required fields' });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
     try {
         const hashedPassword = await hashPassword(password);
         const query = `INSERT INTO users (first_name, last_name, email, password, date_of_birth, phone_number, is_verified, role) 
