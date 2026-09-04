@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Applications.css';
+import { API_BASE_URL } from './api';
 
 function Applications({ user }) {
     const [applications, setApplications] = useState([]);
@@ -17,7 +18,7 @@ function Applications({ user }) {
     }, [user_id]);
 
     const fetchApplications = () => {
-        fetch(`http://localhost:5000/applications/candidate/${user_id}`)
+        fetch(`${API_BASE_URL}/applications/candidate/${user_id}`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch applications');
@@ -37,7 +38,7 @@ function Applications({ user }) {
     const handleDeleteApplication = (applicationId) => {
         if (!window.confirm("Are you sure you want to delete this application?")) return;
 
-        fetch(`http://localhost:5000/applications/${applicationId}`, {
+        fetch(`${API_BASE_URL}/applications/${applicationId}`, {
             method: 'DELETE',
         })
         .then(response => {

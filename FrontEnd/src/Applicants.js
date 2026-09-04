@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from './socket';
 import './Applicants.css';
+import { API_BASE_URL } from './api';
 
 function Applicants({ user }) {
     const [applicants, setApplicants] = useState([]);
@@ -18,7 +19,7 @@ function Applicants({ user }) {
 
     useEffect(() => {
         if (!user_id) return;
-        fetch(`http://localhost:5000/applications/employer/${user_id}`)
+        fetch(`${API_BASE_URL}/applications/employer/${user_id}`)
             .then((res) => res.json())
             .then((data) => {
                 const pendingApplications = data.filter(app => app.application_status !== 'accepted');
@@ -41,7 +42,7 @@ function Applicants({ user }) {
             message: messageText.trim(),
         };
 
-        fetch("http://localhost:5000/messages", {
+        fetch(`${API_BASE_URL}/messages`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(messageData),
@@ -61,7 +62,7 @@ function Applicants({ user }) {
     const handleAcceptApplicant = async (application_id) => {
         setAcceptingApplicant(application_id);
         try {
-            const res = await fetch(`http://localhost:5000/applications/application/${application_id}`, {
+            const res = await fetch(`${API_BASE_URL}/applications/application/${application_id}`, {
                 method: 'PUT',
             });
             if (!res.ok) throw new Error("Failed to accept applicant");
@@ -87,7 +88,7 @@ function Applicants({ user }) {
     const handleDeclineApplicant = async (application_id) => {
         setDecliningApplicant(application_id);
         try {
-            const res = await fetch(`http://localhost:5000/applications/application/${application_id}`, {
+            const res = await fetch(`${API_BASE_URL}/applications/application/${application_id}`, {
                 method: 'PUT',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: "declined" })

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import "./Companies.css"; 
+import { API_BASE_URL } from './api';
 
 function Company() {
     const { companyId } = useParams();
@@ -20,7 +21,7 @@ function Company() {
         const fetchCompany = async () => {
             console.log(`📡 Fetching company for company_id: ${companyId}`);
             try {
-                const response = await fetch(`http://localhost:5000/companies/${companyId}`);
+                const response = await fetch(`${API_BASE_URL}/companies/${companyId}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch company: ${response.statusText}`);
                 }

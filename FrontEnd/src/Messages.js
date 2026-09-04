@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { socket, connectSocket, disconnectSocket } from "./socket";
 import "./Messages.css";
+import { API_BASE_URL } from './api';
 
 function Messages({ user }) {
     const [conversations, setConversations] = useState([]);
@@ -12,7 +13,7 @@ function Messages({ user }) {
     useEffect(() => {
         if (!user?.user_id) return;
         connectSocket(user.user_id);
-        fetch(`http://localhost:5000/messages/conversations/${user.user_id}`)
+        fetch(`${API_BASE_URL}/messages/conversations/${user.user_id}`)
             .then(res => res.json())
             .then(data => setConversations(data))
             .catch(err => console.error("Error fetching conversations:", err));
@@ -30,7 +31,7 @@ function Messages({ user }) {
 
     const loadMessages = (conversation) => {
         setSelectedUser(conversation);
-        fetch(`http://localhost:5000/messages/${user.user_id}/${conversation.user_id}`)
+        fetch(`${API_BASE_URL}/messages/${user.user_id}/${conversation.user_id}`)
             .then(res => res.json())
             .then(data => {
                 setMessages(data);
@@ -48,7 +49,7 @@ function Messages({ user }) {
             message: message,
         };
 
-        fetch("http://localhost:5000/messages", {
+        fetch(`${API_BASE_URL}/messages`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(messageData),

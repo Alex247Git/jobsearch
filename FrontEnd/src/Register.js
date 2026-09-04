@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from './RegisterController';
 import { AuthContext } from './AuthContext';
+import { API_BASE_URL } from './api';
 import {
     Box,
     Typography,
@@ -129,7 +130,7 @@ function Register() {
             availability: candidateData.availability || 'Yes'
         };
         try {
-            const response = await fetch('http://localhost:5000/candidates', {
+            const response = await fetch(`${API_BASE_URL}/candidates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(candidatePayload)

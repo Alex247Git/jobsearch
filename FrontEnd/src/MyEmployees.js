@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './MyEmployees.css';
+import { API_BASE_URL } from './api';
 
 const MyEmployees = () => {
     const [employees, setEmployees] = useState([]);
@@ -11,7 +12,7 @@ const MyEmployees = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/employed/employer/${employerId}`);
+                const res = await fetch(`${API_BASE_URL}/employed/employer/${employerId}`);
                 const data = await res.json();
                 setEmployees(data);
             } catch (error) {
@@ -37,7 +38,7 @@ const MyEmployees = () => {
             const rating = ratings[candidateId];
             const comment = comments[candidateId];
 
-            const res = await fetch('http://localhost:5000/candidate_ratings', {
+            const res = await fetch(`${API_BASE_URL}/candidate_ratings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

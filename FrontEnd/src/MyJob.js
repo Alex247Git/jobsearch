@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import './MyJob.css';
+import { API_BASE_URL } from './api';
 
 function MyJob({ user }) {
     const [jobInfo, setJobInfo] = useState(null);
@@ -11,7 +12,7 @@ function MyJob({ user }) {
     useEffect(() => {
         if (!user?.user_id) return;
 
-        fetch(`http://localhost:5000/employed/${user.user_id}`)
+        fetch(`${API_BASE_URL}/employed/${user.user_id}`)
             .then((res) => res.json())
             .then((data) => setJobInfo(data))
             .catch((err) => console.error("Error fetching job info:", err));
@@ -28,7 +29,7 @@ function MyJob({ user }) {
             alert("Please provide all required fields.");
             return;
         }
-        fetch('http://localhost:5000/company_ratings', {
+        fetch(`${API_BASE_URL}/company_ratings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -55,7 +56,7 @@ function MyJob({ user }) {
     const handleLeaveJob = () => {
         if (!window.confirm("Are you sure you want to leave this job?")) return;
 
-        fetch(`http://localhost:5000/employed/leavejob/${user.user_id}`, {
+        fetch(`${API_BASE_URL}/employed/leavejob/${user.user_id}`, {
             method: 'DELETE',
         })
             .then((res) => {

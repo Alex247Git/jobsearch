@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { socket } from './socket';
 import { useNavigate } from 'react-router-dom';
 import './Candidates.css';
+import { API_BASE_URL } from './api';
 
 function Candidates({ user }) {
     const [candidates, setCandidates] = useState([]);
@@ -21,7 +22,7 @@ function Candidates({ user }) {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('http://localhost:5000/candidates')
+        fetch(`${API_BASE_URL}/candidates`)
             .then(res => res.json())
             .then(data => {
                 setCandidates(data);
@@ -41,7 +42,7 @@ function Candidates({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            const baseUrl = `http://localhost:5000/recommendations/candidates/${user.user_id}`;
+            const baseUrl = `${API_BASE_URL}/recommendations/candidates/${user.user_id}`;
             const queryParams = new URLSearchParams();
             if (jobFilter) {
                 queryParams.append("job_id", jobFilter);
@@ -71,7 +72,7 @@ function Candidates({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            fetch(`http://localhost:5000/jobs/employer/${user.user_id}`)
+            fetch(`${API_BASE_URL}/jobs/employer/${user.user_id}`)
                 .then(res => res.json())
                 .then(data => setJobs(data))
                 .catch(err => console.error('Error fetching jobs:', err));
@@ -127,7 +128,7 @@ function Candidates({ user }) {
     };
 
     const fetchChatHistory = (senderId, receiverId) => {
-        fetch(`http://localhost:5000/messages/${senderId}/${receiverId}`)
+        fetch(`${API_BASE_URL}/messages/${senderId}/${receiverId}`)
             .then(res => res.json())
             .then(data => setChatHistory(data))
             .catch(err => console.error('Error fetching chat history:', err));
@@ -145,7 +146,7 @@ function Candidates({ user }) {
             message: messageText.trim(),
         };
 
-        fetch('http://localhost:5000/messages', {
+        fetch(`${API_BASE_URL}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(messageData),

@@ -21,6 +21,7 @@ import Companies from './Companies';
 import Rating from './Rating';
 import MyJob from './MyJob';
 import MyEmployees from './MyEmployees';
+import { API_BASE_URL } from './api';
 
 function InnerApp() {
     const { user, logout } = useContext(AuthContext);
@@ -31,7 +32,7 @@ function InnerApp() {
         if (!user?.user_id || userRole !== "employed") return;
         const fetchEmploymentInfo = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/employed/${user.user_id}`, {
+                const response = await fetch(`${API_BASE_URL}/employed/${user.user_id}`, {
                     headers: { Authorization: `Bearer ${user.token}` },
                 });
                 const data = await response.json();

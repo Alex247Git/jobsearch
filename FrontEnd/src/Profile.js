@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./Profile.css";
+import { API_BASE_URL } from './api';
 
 function Profile({ user }) {
     const { userId: paramUserId } = useParams();
@@ -22,7 +23,7 @@ function Profile({ user }) {
 
         const fetchUserData = async () => {
             try {
-                const userRes = await fetch(`http://localhost:5000/users/${viewedUserId}`, {
+                const userRes = await fetch(`${API_BASE_URL}/users/${viewedUserId}`, {
                     headers: { Authorization: `Bearer ${user.token}` },
                 });
                 if (!userRes.ok) throw new Error("Failed to fetch user data");
@@ -35,7 +36,7 @@ function Profile({ user }) {
 
         const fetchProfileData = async () => {
             try {
-                const profileRes = await fetch(`http://localhost:5000/profiles/${viewedUserId}`);
+                const profileRes = await fetch(`${API_BASE_URL}/profiles/${viewedUserId}`);
                 if (!profileRes.ok) throw new Error("Failed to fetch profile");
                 const profileJson = await profileRes.json();
                 setProfile(profileJson);
@@ -58,7 +59,7 @@ function Profile({ user }) {
 
     const handleSave = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/profiles/${viewedUserId}`, {
+            const response = await fetch(`${API_BASE_URL}/profiles/${viewedUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
