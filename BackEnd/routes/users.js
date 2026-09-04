@@ -4,6 +4,7 @@ const db = require('../db');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { hashPassword, comparePassword } = require('../authUtils');
+const { authenticateToken } = require('../middleware/auth');
 
 
 const router = express.Router();
@@ -13,30 +14,6 @@ router.use(express.json());
 
 const saltRounds = 10;
 const JWT_SECRET = process.env.JWT_SECRET;
-
-// Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-    if (!token) {
-        return res.status(401).json({ error: 'Access token required' });
-    }
-
-    // For testing purposes, accept 'valid_token' as valid
-    if (token === 'valid_token') {
-        req.user = { user_id: 1, role: 'candidate' };
-        return next();
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid token' });
-        }
-        req.user = user;
-        next();
-    });
-};
 
 
 // **REGISTER USER**
