@@ -20,16 +20,16 @@ to app behavior (except adding email validation on POST /users and removing the
 ## Tasks (each = one atomic commit)
 
 - [x] Phase 0: docs/PLAN.md + branch feat/test-hygiene
-- [ ] Phase 1: Extract authenticateToken into BackEnd/middleware/auth.js;
+- [x] Phase 1: Extract authenticateToken into BackEnd/middleware/auth.js;
       remove the 'valid_token' backdoor (security).
-- [ ] Phase 2: Rewrite BackEnd/server.test.js with jest.mock('./db') fixtures
+- [x] Phase 2: Rewrite BackEnd/server.test.js with jest.mock('./db') fixtures
       and real jwt.sign() tokens. Criteria: 10/10 green without MySQL running.
-- [ ] Phase 3: Add email format validation to POST /users (parity with PUT).
-- [ ] Phase 4: Replace App.test.js with a smoke test (render App, mock global
+- [x] Phase 3: Add email format validation to POST /users (parity with PUT).
+- [x] Phase 4: Replace App.test.js with a smoke test (render App, mock global
       fetch). Criteria: 1/1 green.
-- [ ] Phase 5: Move all frontend deps to FrontEnd/package.json; root keeps
+- [x] Phase 5: Move all frontend deps to FrontEnd/package.json; root keeps
       backend deps only. Try removing react-is. Verify: jest + CRA test + build.
-- [ ] Phase 6: PR #2 -> merge -> delete branches.
+- [x] Phase 6: PR #2 -> merge -> delete branches.
 
 ## Out of scope (later branches)
 
