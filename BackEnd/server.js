@@ -21,11 +21,6 @@ const http = require('http');
 const initializeSocket = require('./socket');
 
 
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'not set');
-console.log('DB_NAME:', process.env.DB_NAME);
-
 const app = express();
 
 app.use(express.json());
