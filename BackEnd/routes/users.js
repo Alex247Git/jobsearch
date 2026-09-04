@@ -62,7 +62,6 @@ router.post('/', async (req, res) => {
         res.status(201).json({ message: 'User created successfully', user_id: result.insertId });
         const checkQuery = `SELECT password FROM users WHERE email = ?`;
         const [checkResult] = await db.promise().query(checkQuery, [email]);
-        console.log('Stored Password in DB:', checkResult[0].password);
     } catch (err) {
         console.error('Error creating user:', err.message);
         res.status(500).json({ error: 'An error occurred while creating the user' });

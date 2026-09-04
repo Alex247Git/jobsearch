@@ -21,11 +21,6 @@ const http = require('http');
 const initializeSocket = require('./socket');
 
 
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'not set');
-console.log('DB_NAME:', process.env.DB_NAME);
-
 const app = express();
 
 app.use(express.json());
@@ -38,10 +33,6 @@ app.use(cors({
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initializeSocket(server, db);
-
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
 
 app.use('/users', userRoutes);
 app.use('/candidates', candidatesRouter);
@@ -57,5 +48,9 @@ app.use('/saved_jobs', savedJobsRouter);
 app.use('/search_history', searchHistoryRouter);
 app.use('/applications', applicationsRouter);
 app.use('/employed', employedRouter);
+
+server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
 
 module.exports = app;

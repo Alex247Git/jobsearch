@@ -1,25 +1,27 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthContext, AuthProvider } from './AuthContext';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { AuthContext, AuthProvider } from './context/AuthContext';
 import './App.css';
-import Header from './Header';
-import Footer from './Footer';
-import Home from './Home';
-import HomeNotLoggedIn from './HomeNotLoggedIn';
-import Register from './Register';
-import Login from './Login';
-import Jobs from './Jobs';
-import Profile from './Profile';
-import Messages from './Messages';
-import Applications from './Applications';
-import Applicants from './Applicants';
-import SavedJobs from './SavedJobs';
-import Candidates from './Candidates';
-import JobDetails from './JobDetails';
-import Companies from './Companies';
-import Rating from './Rating';
-import MyJob from './MyJob';
-import MyEmployees from './MyEmployees';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import HomeNotLoggedIn from './pages/HomeNotLoggedIn';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Jobs from './pages/Jobs';
+import Profile from './pages/Profile';
+import Messages from './pages/Messages';
+import Applications from './pages/Applications';
+import Applicants from './pages/Applicants';
+import SavedJobs from './pages/SavedJobs';
+import Candidates from './pages/Candidates';
+import JobDetails from './pages/JobDetails';
+import Companies from './pages/Companies';
+import Rating from './components/Rating';
+import MyJob from './pages/MyJob';
+import MyEmployees from './pages/MyEmployees';
+import { API_BASE_URL } from './api';
 
 function InnerApp() {
     const { user, logout } = useContext(AuthContext);
@@ -30,7 +32,7 @@ function InnerApp() {
         if (!user?.user_id || userRole !== "employed") return;
         const fetchEmploymentInfo = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/employed/${user.user_id}`, {
+                const response = await fetch(`${API_BASE_URL}/employed/${user.user_id}`, {
                     headers: { Authorization: `Bearer ${user.token}` },
                 });
                 const data = await response.json();
@@ -85,11 +87,37 @@ return (
     );
 }
 
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#b4f000', // greenyellow equivalent
+        },
+        secondary: {
+            main: '#282c34', // dark background
+        },
+        background: {
+            default: '#282c34',
+            paper: '#282c34',
+        },
+        text: {
+            primary: '#ffffff',
+            secondary: '#b4f000',
+        },
+    },
+    typography: {
+        h1: {
+            fontSize: '2rem',
+        },
+    },
+});
+
 function App() {
     return (
-        <AuthProvider>
-            <InnerApp />
-        </AuthProvider>
+        <ThemeProvider theme={theme}>
+            <AuthProvider>
+                <InnerApp />
+            </AuthProvider>
+        </ThemeProvider>
     );
 }
 

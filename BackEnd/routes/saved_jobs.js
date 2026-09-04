@@ -7,7 +7,6 @@ router.post('/', (req, res) => {
     const { user_id, job_id, role } = req.body;
     const saved_date = new Date();
 
-    console.log('Request body:', req.body);
 
     if (!user_id || !job_id || !role) {
         console.error('Missing user_id, job_id, or role');
@@ -40,7 +39,6 @@ router.post('/', (req, res) => {
                     });
                 }
 
-                console.log('Database insert result:', insertResult);
                 res.status(201).json({
                     message: 'Job saved successfully',
                     saved_jobs_id: insertResult.insertId,

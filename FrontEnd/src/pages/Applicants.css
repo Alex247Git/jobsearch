@@ -1,0 +1,68 @@
+.applicants-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.applicants-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.applicant-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.applicant-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.applicant-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.applicant-card h3 {
+    margin: 0 0 10px;
+    color: #34495e;
+}
+
+.applicant-card p {
+    margin: 5px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.applicant-card strong {
+    color: #2c3e50;
+}
+
+.applicants-container p {
+    text-align: center;
+    font-size: 16px;
+    color: #7f8c8d;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn.send-message-btn {
+    background-color: #e67e22;
+}
+
+.btn.send-message-btn:hover {
+    background-color: #d35400;
+}

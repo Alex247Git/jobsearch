@@ -1,0 +1,16 @@
+import { io } from "socket.io-client";
+import { API_BASE_URL } from '../api';
+
+const SOCKET_URL = `${API_BASE_URL}`; 
+export const socket = io(SOCKET_URL, { autoConnect: false });
+
+export const connectSocket = (userId) => {
+    if (userId) {
+        socket.auth = { userId };
+        socket.connect();
+    }
+};
+
+export const disconnectSocket = () => {
+    socket.disconnect();
+};

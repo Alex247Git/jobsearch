@@ -4,6 +4,10 @@
   "scripts": {
     "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
     "start-backend": "node BackEnd/server.js",
+    "dev": "npm run db:start && concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "db:start": "podman inspect jobsearch-mysql >/dev/null 2>&1 || { echo 'ERROR: Podman container jobsearch-mysql not found. See README (MySQL in WSL section) to create it.'; exit 1; }; podman start jobsearch-mysql >/dev/null 2>&1 || true; echo 'Waiting for MySQL to accept connections...'; for i in $(seq 1 30); do podman exec jobsearch-mysql mysqladmin ping --silent >/dev/null 2>&1 && { echo 'MySQL is ready.'; exit 0; }; sleep 1; done; echo 'ERROR: MySQL not ready after 30s. Check logs: npm run db:logs'; exit 1",
+    "db:stop": "podman stop jobsearch-mysql",
+    "db:logs": "podman logs -f jobsearch-mysql",
     "start-frontend": "cd FrontEnd && npx react-scripts start",
     "build-frontend": "cd FrontEnd && npx react-scripts build",
     "test": "npm run test-backend && npm run test-frontend",
@@ -11,16 +15,15 @@
     "test-frontend": "cd FrontEnd && npx react-scripts test"
   },
   "dependencies": {
-    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
-    "@tensorflow/tfjs": "^4.22.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@xenova/transformers": "^2.17.2",
-    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.3",
     "compromise": "^14.14.4",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -30,6 +33,7 @@
     "mysql2": "^3.11.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-is": "^18.3.1",
     "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
     "socket.io": "^4.8.1",
@@ -58,5 +62,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "react-is": "^18.3.1"
   }
 }

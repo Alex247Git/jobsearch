@@ -98,7 +98,6 @@ router.get('/candidate/:user_id', (req, res) => {
             console.error('Error fetching applications:', err.stack);
             return res.status(500).json({ message: 'Failed to fetch applications' });
         }
-        console.log('Query Results:', results);
         res.status(200).json(results);
     });
 });
@@ -130,14 +129,12 @@ router.get('/employer/:user_id', (req, res) => {
     JOIN users ON applications.user_id = users.user_id  
     WHERE employers.user_id = ?`;
 
-    console.log('User ID:', user_id);
 
     db.query(query, [user_id], (err, results) => {
         if (err) {
             console.error('Error fetching applicants:', err.stack);
             return res.status(500).json({ message: 'Failed to fetch applicants' });
         }
-        console.log('Query Results:', results);
         res.status(200).json(results);
     });
 

@@ -1,6 +1,5 @@
 const request = require('supertest');
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const userRoutes = require('./routes/users');
 const app = require('./server'); // Import your server file
@@ -49,7 +48,7 @@ test('Should return a 500 error when the database connection fails', async () =>
     };
 
     const mockApp = express();
-    mockApp.use(bodyParser.json());
+    mockApp.use(express.json());
     mockApp.use(cors());
     mockApp.use('/users', userRoutes);
 
