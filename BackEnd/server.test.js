@@ -1,112 +1,102 @@
 const request = require('supertest');
-const express = require('express');
-const cors = require('cors');
-const userRoutes = require('./routes/users');
-const app = require('./server'); // Import your server file
+const jwt = require('jsonwebtoken');
+
+process.env.JWT_SECRET = 'test-jwt-secret';
+
+// Mock the mysql2 pool so tests never need a live database.
+jest.mock('./db', () => {
+    const query = jest.fn();
+    const execute = jest.fn();
+    return { promise: () => ({ query, execute }) };
+});
+
+const db = require('./db');
+const app = require('./server');
+
+const token = () =>
+    'Bearer ' + jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET);
+
+beforeEach(() => {
+    db.promise().query.mockReset();
+    db.promise().execute.mockReset();
+});
 
 test('Should return a 404 error when accessing a non-existent route', async () => {
     const response = await request(app).get('/non-existent-route');
     expect(response.statusCode).toBe(404);
 });
 
-
-// Unit test for creating a user with missing required fields
 test('Should return a 400 error when creating a user with missing required fields', async () => {
     const response = await request(app)
         .post('/users')
-        .send({
-            username: 'testUser',
-            // Missing password field
-        });
+        .send({ username: 'testUser' });
     expect(response.statusCode).toBe(400);
 });
 
-// Unit test for updating a user with invalid email format
 test('Should return a 400 error when updating a user with invalid email format', async () => {
     const response = await request(app)
         .put('/users/1')
-        .send({
-            email: 'invalid_email_format',
-            // Other user fields
-        });
+        .send({ email: 'invalid_email_format' })
+        .set('Authorization', token());
     expect(response.statusCode).toBe(400);
 });
 
 test('Should return a 401 error when attempting to access user data without authentication', async () => {
     const response = await request(app)
-        .get('/users/1') // Assuming user ID 1 for this test
-        .set('Authorization', ''); // No authorization header
+        .get('/users/1')
+        .set('Authorization', '');
     expect(response.statusCode).toBe(401);
 });
 
-// Unit test for handling database connection failure
-test('Should return a 500 error when the database connection fails', async () => {
-    const mockDb = {
-        connect: jest.fn().mockImplementationOnce((cb) => {
-            cb(new Error('Database connection failed'));
-        }),
-    };
-
-    const mockApp = express();
-    mockApp.use(express.json());
-    mockApp.use(cors());
-    mockApp.use('/users', userRoutes);
-
-    const server = mockApp.listen(80, () => { });
-
-    const response = await request(server)
-        .get('/users') // Assuming a route that does not require database connection
-        .set('Authorization', ''); // No authorization header
-
-    expect(response.statusCode).toBe(401);
-
-    server.close();
-});
-
-// Unit test for retrieving user data by ID
-test('Should return the correct user data when retrieving a user by ID', async () => {
-    const userId = 1; // Assuming user ID 1 exists in the database
+test('Should return a 500 error when the database query fails', async () => {
+    db.promise().query.mockRejectedValueOnce(new Error('Database connection failed'));
     const response = await request(app)
-        .get(`/users/${userId}`)
-        .set('Authorization', 'Bearer valid_token'); // Replace with a valid token
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('user_id', userId);
-    expect(response.body).toHaveProperty('first_name', 'Alice');
-    // Add more assertions for other expected user properties
-});
-
-// Unit test for updating a user's information
-test('Should return a 200 status code when updating a user\'s information', async () => {
-    const response = await request(app)
-        .put('/users/1')
-        .send({
-            username: 'updatedUser',
-            email: 'updated_email@example.com',
-            // Other user fields
-        })
-        .set('Authorization', 'Bearer valid_token'); // Replace with valid token
-    expect(response.statusCode).toBe(200);
-});
-
-// Unit test for deleting a user by ID
-test('Should return a 500 status code when deleting a user with foreign key constraint', async () => {
-    const response = await request(app)
-        .delete('/users/1') // Assuming user ID 1 for this test
-        .set('Authorization', 'Bearer valid_token'); // Replace with a valid token
+        .get('/users/1')
+        .set('Authorization', token());
     expect(response.statusCode).toBe(500);
 });
 
-// Unit test for searching users by name
-test('Should return a 200 status code when searching for users by name', async () => {
+test('Should return the correct user data when retrieving a user by ID', async () => {
+    db.promise().query.mockResolvedValueOnce([
+        [{ user_id: 1, first_name: 'Alice', last_name: 'Smith', role: 'candidate' }],
+    ]);
     const response = await request(app)
-        .get('/users?name=John') // Assuming 'John' is a sample name for this test
-        .set('Authorization', 'Bearer valid_token'); // Replace with a valid token
+        .get('/users/1')
+        .set('Authorization', token());
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('user_id', 1);
+    expect(response.body).toHaveProperty('first_name', 'Alice');
+});
+
+test("Should return a 200 status code when updating a user's information", async () => {
+    db.promise().query.mockResolvedValueOnce([{ affectedRows: 1 }]);
+    const response = await request(app)
+        .put('/users/1')
+        .send({ email: 'updated_email@example.com' })
+        .set('Authorization', token());
+    expect(response.statusCode).toBe(200);
+});
+
+test('Should return a 500 status code when deleting a user with foreign key constraint', async () => {
+    db.promise().query.mockRejectedValueOnce(new Error('ER_ROW_IS_REFERENCED_2'));
+    const response = await request(app)
+        .delete('/users/1')
+        .set('Authorization', token());
+    expect(response.statusCode).toBe(500);
+});
+
+test('Should return a 200 status code when searching for users by name', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ user_id: 1, first_name: 'John' }]]);
+    const response = await request(app)
+        .get('/users?name=John')
+        .set('Authorization', token());
     expect(response.statusCode).toBe(200);
 });
 
 test('Should return a 200 status code when retrieving a paginated list of users', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ user_id: 1 }, { user_id: 2 }]]);
     const response = await request(app)
-        .get('/users?page=1&limit=10') // Assuming pagination parameters
-        .set('Authorization', 'Bearer valid_token'); // Include valid token for authentication
+        .get('/users?page=1&limit=10')
+        .set('Authorization', token());
     expect(response.statusCode).toBe(200);
 });

@@ -49,8 +49,10 @@ app.use('/search_history', searchHistoryRouter);
 app.use('/applications', applicationsRouter);
 app.use('/employed', employedRouter);
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
