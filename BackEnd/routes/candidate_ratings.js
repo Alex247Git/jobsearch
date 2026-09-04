@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST route to create a new candidate rating
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { candidate_id, employer_id, rating, comment } = req.body;
 
     if (!candidate_id || !employer_id || !rating) {

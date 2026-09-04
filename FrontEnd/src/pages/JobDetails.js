@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./JobDetails.css";
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function JobDetails({ user }) {
     const { jobId } = useParams();
@@ -15,7 +15,7 @@ function JobDetails({ user }) {
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/jobs/${jobId}`)
+        apiFetch(`/jobs/${jobId}`)
             .then(response => response.json())
             .then(data => setJob(data))
             .catch(error => console.error("Error fetching job details:", error));
@@ -23,12 +23,12 @@ function JobDetails({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            fetch(`${API_BASE_URL}/applications/candidate/${user.user_id}`)
+            apiFetch(`/applications/candidate/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => setAppliedJobs(data.map(application => application.job_id)))
                 .catch(error => console.error('Error fetching applied jobs:', error));
 
-            fetch(`${API_BASE_URL}/saved_jobs/${user.user_id}`)
+            apiFetch(`/saved_jobs/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => setSavedJobs(data.map(job => job.job_id)))
                 .catch(error => console.error('Error fetching saved jobs:', error));
@@ -46,7 +46,7 @@ function JobDetails({ user }) {
             return;
         }
 
-        fetch(`${API_BASE_URL}/applications`, {
+        apiFetch(`/applications`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -75,7 +75,7 @@ function JobDetails({ user }) {
             return;
         }
 
-        fetch(`${API_BASE_URL}/saved_jobs`, {
+        apiFetch(`/saved_jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -93,7 +93,7 @@ function JobDetails({ user }) {
     };
 
     const fetchChatHistory = (senderId, receiverId) => {
-        fetch(`${API_BASE_URL}/messages/${senderId}/${receiverId}`)
+        apiFetch(`/messages/${senderId}/${receiverId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -119,7 +119,7 @@ function JobDetails({ user }) {
             message: messageText.trim(),
         };
 
-        fetch(`${API_BASE_URL}/messages`, {
+        apiFetch(`/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(messageData),

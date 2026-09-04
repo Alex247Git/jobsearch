@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST new message
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { sender_id, receiver_id, message } = req.body;
 
     if (!sender_id || !receiver_id || !message) {
@@ -27,7 +28,7 @@ router.post('/', async (req, res) => {
 
 
 // GET all messages
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
     try {
         const [results] = await db.promise().query("SELECT * FROM messages ORDER BY created_at ASC");
 
@@ -43,7 +44,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET all conversations for a user
-router.get("/conversations/:user_id", async (req, res) => {
+router.get("/conversations/:user_id", authenticateToken, async (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -68,7 +69,7 @@ router.get("/conversations/:user_id", async (req, res) => {
 
 
 // GET messages between two users
-router.get('/:sender_id/:receiver_id', async (req, res) => {
+router.get('/:sender_id/:receiver_id', authenticateToken, async (req, res) => {
     const { sender_id, receiver_id } = req.params;
 
     const query = `
@@ -89,7 +90,7 @@ router.get('/:sender_id/:receiver_id', async (req, res) => {
 
 
 // UPDATE message by ID
-router.put("/:id", async (req, res) => {
+router.put("/:id", authenticateToken, async (req, res) => {
     const messageId = req.params.id;
     const { message_content } = req.body;
 
@@ -113,7 +114,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE message by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateToken, async (req, res) => {
     const messageId = req.params.id;
 
     try {

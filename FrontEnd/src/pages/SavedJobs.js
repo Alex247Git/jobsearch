@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import './SavedJobs.css'; 
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function SavedJobs({ user }) {
     const [savedJobs, setSavedJobs] = useState([]);
@@ -13,7 +13,7 @@ function SavedJobs({ user }) {
             console.error('User ID is undefined. Cannot fetch saved jobs.');
             return;
         }
-        fetch(`${API_BASE_URL}/saved_jobs/${user_id}`)
+        apiFetch(`/saved_jobs/${user_id}`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch saved jobs');
@@ -29,7 +29,7 @@ function SavedJobs({ user }) {
             console.error('User ID is undefined. Cannot remove saved job.');
             return;
         }
-        fetch(`${API_BASE_URL}/saved_jobs/${user_id}/${jobId}`, {
+        apiFetch(`/saved_jobs/${user_id}/${jobId}`, {
             method: 'DELETE',
         })
             .then((response) => {

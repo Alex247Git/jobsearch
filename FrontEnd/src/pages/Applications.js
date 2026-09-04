@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Applications.css';
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function Applications({ user }) {
     const [applications, setApplications] = useState([]);
@@ -15,10 +15,10 @@ function Applications({ user }) {
         }
 
         fetchApplications();
-    }, [user_id]);
+    }, [user_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchApplications = () => {
-        fetch(`${API_BASE_URL}/applications/candidate/${user_id}`)
+        apiFetch(`/applications/candidate/${user_id}`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch applications');
@@ -38,7 +38,7 @@ function Applications({ user }) {
     const handleDeleteApplication = (applicationId) => {
         if (!window.confirm("Are you sure you want to delete this application?")) return;
 
-        fetch(`${API_BASE_URL}/applications/${applicationId}`, {
+        apiFetch(`/applications/${applicationId}`, {
             method: 'DELETE',
         })
         .then(response => {

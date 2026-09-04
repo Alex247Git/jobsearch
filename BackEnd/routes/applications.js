@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST new application
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, (req, res) => {
     const { user_id, job_id, status, applied_at } = req.body;
 
     db.query(
@@ -35,7 +36,7 @@ router.post('/', (req, res) => {
 });
 
 // GET all applications
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const [results] = await db.promise().query('SELECT * FROM applications');
 
@@ -51,7 +52,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET applications by candidate user_id
-router.get('/candidate/:user_id', (req, res) => {
+router.get('/candidate/:user_id', authenticateToken, (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -104,7 +105,7 @@ router.get('/candidate/:user_id', (req, res) => {
 
 
 // GET application by user_id
-router.get('/employer/:user_id', (req, res) => {
+router.get('/employer/:user_id', authenticateToken, (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -142,7 +143,7 @@ router.get('/employer/:user_id', (req, res) => {
 
 
 // GET application by application_id
-router.get('/:application_id', async (req, res) => {
+router.get('/:application_id', authenticateToken, async (req, res) => {
     const applicationId = req.params.application_id;
 
     try {
@@ -161,7 +162,7 @@ router.get('/:application_id', async (req, res) => {
 });
 
 // UPDATE application by application_id
-router.put('/:application_id', async (req, res) => {
+router.put('/:application_id', authenticateToken, async (req, res) => {
     const applicationId = req.params.application_id;
     const { job_id, status, applied_at, user_id } = req.body;
 
@@ -207,7 +208,7 @@ router.put('/:application_id', async (req, res) => {
 });
 
 // PUT /application/:application_id - Accept applicant and create employment
-router.put("/application/:application_id", async (req, res) => {
+router.put("/application/:application_id", authenticateToken, async (req, res) => {
     const { application_id } = req.params;
 
     try {
@@ -271,7 +272,7 @@ router.put("/application/:application_id", async (req, res) => {
 });
 
 // DELETE application by application_id
-router.delete('/:application_id', async (req, res) => {
+router.delete('/:application_id', authenticateToken, async (req, res) => {
     const applicationId = req.params.application_id;
 
     try {

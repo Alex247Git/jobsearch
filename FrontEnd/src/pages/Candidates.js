@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { socket } from '../services/socket';
 import { useNavigate } from 'react-router-dom';
 import './Candidates.css';
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 
 function Candidates({ user }) {
     const [candidates, setCandidates] = useState([]);
@@ -11,7 +11,7 @@ function Candidates({ user }) {
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [selectedCandidateName, setSelectedCandidateName] = useState("");
     const [messageText, setMessageText] = useState("");
-    const [chatHistory, setChatHistory] = useState([]);
+    const [, setChatHistory] = useState([]);
     const [searchName, setSearchName] = useState("");
     const [locationFilter, setLocationFilter] = useState("");
     const [availabilityFilter, setAvailabilityFilter] = useState("");
@@ -22,7 +22,7 @@ function Candidates({ user }) {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/candidates`)
+        apiFetch(`/candidates`)
             .then(res => res.json())
             .then(data => {
                 setCandidates(data);
@@ -42,7 +42,7 @@ function Candidates({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            const baseUrl = `${API_BASE_URL}/recommendations/candidates/${user.user_id}`;
+            const baseUrl = `/recommendations/candidates/${user.user_id}`;
             const queryParams = new URLSearchParams();
             if (jobFilter) {
                 queryParams.append("job_id", jobFilter);
@@ -52,7 +52,7 @@ function Candidates({ user }) {
             const url = `${baseUrl}?${queryParams.toString()}`;
             console.log("Fetching recommendations with URL:", url);
             console.log("Selected job ID (jobFilter):", jobFilter);
-            fetch(url)
+            apiFetch(url)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
@@ -72,7 +72,7 @@ function Candidates({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            fetch(`${API_BASE_URL}/jobs/employer/${user.user_id}`)
+            apiFetch(`/jobs/employer/${user.user_id}`)
                 .then(res => res.json())
                 .then(data => setJobs(data))
                 .catch(err => console.error('Error fetching jobs:', err));
@@ -128,7 +128,7 @@ function Candidates({ user }) {
     };
 
     const fetchChatHistory = (senderId, receiverId) => {
-        fetch(`${API_BASE_URL}/messages/${senderId}/${receiverId}`)
+        apiFetch(`/messages/${senderId}/${receiverId}`)
             .then(res => res.json())
             .then(data => setChatHistory(data))
             .catch(err => console.error('Error fetching chat history:', err));
@@ -146,7 +146,7 @@ function Candidates({ user }) {
             message: messageText.trim(),
         };
 
-        fetch(`${API_BASE_URL}/messages`, {
+        apiFetch(`/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(messageData),

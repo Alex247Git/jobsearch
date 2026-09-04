@@ -4,7 +4,6 @@ import { socket } from '../../services/socket';
 import {
     Box,
     Typography,
-    TextField,
     Button,
     Container,
     Paper,
@@ -12,25 +11,11 @@ import {
     CardContent,
     CardActions,
     Grid,
-    Slider,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Chip,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
     useTheme,
     useMediaQuery,
     IconButton,
     Tooltip,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -38,8 +23,7 @@ import StarIcon from '@mui/icons-material/Star';
 import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import SendIcon from '@mui/icons-material/Send';
-import { API_BASE_URL } from '../../api';
+import { apiFetch } from '../../api';
 import JobFilters from './JobFilters';
 import JobCard from './JobCard';
 import MessageDialog from './MessageDialog';
@@ -65,7 +49,7 @@ function Jobs({ user }) {
 
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/jobs`)
+        apiFetch(`/jobs`)
             .then(response => response.json())
             .then(data => {
                 console.log("Raw fetched data:", data);
@@ -79,14 +63,14 @@ function Jobs({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            fetch(`${API_BASE_URL}/applications/candidate/${user.user_id}`)
+            apiFetch(`/applications/candidate/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("Applied Jobs:", data);
                     setAppliedJobs(data.map(application => application.job_id));
                 })
                 .catch(error => console.error('Error fetching applied jobs:', error));
-            fetch(`${API_BASE_URL}/saved_jobs/${user.user_id}`)
+            apiFetch(`/saved_jobs/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("Saved Jobs:", data);
@@ -97,7 +81,7 @@ function Jobs({ user }) {
     }, [user]);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/company_ratings`)
+        apiFetch(`/company_ratings`)
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -112,7 +96,7 @@ function Jobs({ user }) {
 
     useEffect(() => {
         if (user?.user_id) {
-            fetch(`${API_BASE_URL}/recommendations/jobs/${user.user_id}`)
+            apiFetch(`/recommendations/jobs/${user.user_id}`)
                 .then(res => res.json())
                 .then(data => {
                     console.log("Recommended Jobs:", data);
@@ -150,7 +134,7 @@ function Jobs({ user }) {
             return;
         }
 
-        fetch(`${API_BASE_URL}/applications`, {
+        apiFetch(`/applications`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -188,7 +172,7 @@ function Jobs({ user }) {
             return;
         }
 
-        fetch(`${API_BASE_URL}/saved_jobs`, {
+        apiFetch(`/saved_jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -208,7 +192,7 @@ function Jobs({ user }) {
     };
 
     const fetchChatHistory = (senderId, receiverId) => {
-        fetch(`${API_BASE_URL}/messages/${senderId}/${receiverId}`)
+        apiFetch(`/messages/${senderId}/${receiverId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -244,7 +228,7 @@ function Jobs({ user }) {
             message: messageText.trim(),
         };
 
-        fetch(`${API_BASE_URL}/messages`, {
+        apiFetch(`/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(messageData),

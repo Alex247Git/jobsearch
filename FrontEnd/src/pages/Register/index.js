@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { registerUser } from '../../services/RegisterController';
 import { AuthContext } from '../../context/AuthContext';
-import { API_BASE_URL } from '../../api';
+import { apiFetch } from '../../api';
 import Step1UserForm from './Step1UserForm';
 import Step2ProfileForm from './Step2ProfileForm';
 import Step3CandidateForm from './Step3CandidateForm';
@@ -128,7 +128,7 @@ function Register() {
             availability: candidateData.availability || 'Yes'
         };
         try {
-            const response = await fetch(`${API_BASE_URL}/candidates`, {
+            const response = await apiFetch(`/candidates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(candidatePayload)

@@ -100,3 +100,26 @@ test('Should return a 200 status code when retrieving a paginated list of users'
         .set('Authorization', token());
     expect(response.statusCode).toBe(200);
 });
+
+test('Should return a 401 when fetching saved jobs without authentication', async () => {
+    const response = await request(app).get('/saved_jobs/1');
+    expect(response.statusCode).toBe(401);
+});
+
+test('Should return a 401 when posting a message without authentication', async () => {
+    const response = await request(app)
+        .post('/messages')
+        .send({ sender_id: 1, receiver_id: 2, message_text: 'hello' });
+    expect(response.statusCode).toBe(401);
+});
+
+test('Should return a 401 when listing applications without authentication', async () => {
+    const response = await request(app).get('/applications');
+    expect(response.statusCode).toBe(401);
+});
+
+test('Should still allow anonymous access to public job listings', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ job_id: 5, title: 'Dev' }]]);
+    const response = await request(app).get('/jobs');
+    expect(response.statusCode).toBe(200);
+});

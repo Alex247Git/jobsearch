@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST new search history entry
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { candidate_id, keywords, searched_at } = req.body;
 
     if (!candidate_id || !keywords || !searched_at) {
@@ -21,7 +22,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET all search history entries
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const [results] = await db.promise().query('SELECT * FROM search_history');
 
@@ -37,7 +38,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET search history entry by candidate_id
-router.get('/:candidate_id', async (req, res) => {
+router.get('/:candidate_id', authenticateToken, async (req, res) => {
     const candidateId = req.params.candidate_id;
 
     try {
@@ -56,7 +57,7 @@ router.get('/:candidate_id', async (req, res) => {
 });
 
 // DELETE search history entry by search_history_id
-router.delete('/:search_history_id', async (req, res) => {
+router.delete('/:search_history_id', authenticateToken, async (req, res) => {
     const searchHistoryId = req.params.search_history_id;
 
     try {

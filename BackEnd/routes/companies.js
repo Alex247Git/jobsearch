@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // POST new company
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { company_name, industry, founded_year, location, description } = req.body;
     if (!company_name || !location || !industry || !founded_year || !description) {
         return res.status(400).json({ error: 'Please provide all required fields' });
@@ -64,7 +65,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // UPDATE company by id
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     const companyId = req.params.id;
     const { company_name, industry, founded_year, location, description } = req.body;
 
@@ -114,7 +115,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE company by id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     const companyId = req.params.id;
 
     try {

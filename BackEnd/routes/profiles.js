@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken } = require('../middleware/auth');
 
 // CREATE user profile
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { user_id, bio, skills, experience, location, education, certifications, languages, social_links, cv, availability, website } = req.body;
 
     if (!user_id) {
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET user profile by user_id
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', authenticateToken, async (req, res) => {
     const userId = req.params.userId;
 
     try {
@@ -47,7 +48,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // UPDATE user and profile
-router.put('/:userId', async (req, res) => {
+router.put('/:userId', authenticateToken, async (req, res) => {
     const userId = req.params.userId;
     const {
         bio, skills, experience, location, education, certifications,
@@ -98,7 +99,7 @@ router.put('/:userId', async (req, res) => {
 
 
 // DELETE user profile
-router.delete('/:userId', async (req, res) => {
+router.delete('/:userId', authenticateToken, async (req, res) => {
     const userId = req.params.userId;
 
     try {

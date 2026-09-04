@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { API_BASE_URL } from '../api';
+import { apiFetch } from '../api';
 import {
     Box,
     Typography,
@@ -31,7 +31,7 @@ function Login() {
         setErrorMessage('');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/users/login`, {
+            const response = await apiFetch(`/users/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
