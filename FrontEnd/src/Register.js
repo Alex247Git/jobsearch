@@ -2,11 +2,28 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from './RegisterController';
 import { AuthContext } from './AuthContext';
-import './Register.css';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Alert,
+    Paper,
+    Container,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Stepper,
+    Step,
+    StepLabel,
+} from '@mui/material';
 
 function Register() {
     const [step, setStep] = useState(1);
     const [userId, setUserId] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -64,10 +81,14 @@ function Register() {
             ? value === 'true'
             : value;
         setter((prev) => ({ ...prev, [name]: parsedValue }));
+        if (errorMessage) setErrorMessage('');
     };
 
     const handleSubmitUser = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrorMessage('');
+
         try {
             const response = await registerUser(userData, 1);
             setUserId(response.user_id);
@@ -75,22 +96,33 @@ function Register() {
             setStep(2);
         } catch (error) {
             console.error('User registration failed:', error);
+            setErrorMessage('Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
-
     const handleSubmitProfile = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrorMessage('');
+
         try {
             await registerUser({ ...profileData, user_id: userId }, 2);
             setStep(3);
         } catch (error) {
             console.error('Profile submission failed:', error);
+            setErrorMessage('Profile submission failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSubmitCandidate = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrorMessage('');
+
         const candidatePayload = {
             user_id: userData.user_id,
             cover_letter: candidateData.cover_letter,
@@ -107,11 +139,17 @@ function Register() {
             navigate('/Home');
         } catch (error) {
             console.error('Candidate details failed:', error);
+            setErrorMessage('Candidate registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSubmitEmployer = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrorMessage('');
+
         try {
             await registerUser({
                 role: 'employer',
@@ -124,11 +162,17 @@ function Register() {
             setStep(4);
         } catch (error) {
             console.error('Company details failed:', error);
+            setErrorMessage('Company registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSubmitJob = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrorMessage('');
+
         try {
             const companyId = localStorage.getItem('companyId');
             console.log('📦 Submitting Job...');
@@ -152,6 +196,9 @@ function Register() {
             navigate('/Home');
         } catch (error) {
             console.error('❌ Job post failed:', error);
+            setErrorMessage('Job posting failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -178,86 +225,1250 @@ function Register() {
                 location: '',
                 skills_required: '',
                 salary: '',
-                type: 'full-time',
+                job_type: 'full-time',
                 remote_option: false,
                 category: ''
             });
             console.log('🧼 Form cleared for new job');
         } catch (error) {
             console.error('❌ Post another job failed:', error);
+            setErrorMessage('Posting additional job failed. Please try again.');
         }
     };
 
+    const steps = ['Basic Info', 'Profile', 'Role Details', 'Job Posting'];
+
     return (
-        <div className="register">
-            {step === 1 && (
-                <form onSubmit={handleSubmitUser}>
-                    <h2>Register</h2>
-                    <label>First Name: <input type="text" name="first_name" placeholder="Alex" value={userData.first_name} onChange={handleChange(setUserData)} required /></label>
-                    <label>Last Name: <input type="text" name="last_name" placeholder="Adamos" value={userData.last_name} onChange={handleChange(setUserData)} required /></label>
-                    <label>Email: <input type="email" name="email" placeholder="Alex@example.com" value={userData.email} onChange={handleChange(setUserData)} required /></label>
-                    <label>Password: <input type="password" name="password" placeholder="Create a password" value={userData.password} onChange={handleChange(setUserData)} required /></label>
-                    <label>Phone Number: <input type="text" name="phone_number" placeholder="1234567890" value={userData.phone_number} onChange={handleChange(setUserData)} required /></label>
-                    <label>Date of Birth: <input type="date" name="date_of_birth" value={userData.date_of_birth} onChange={handleChange(setUserData)} required /></label>
-                    <label>Role:<select name="role" value={userData.role} onChange={handleChange(setUserData)}><option value="candidate">Candidate</option><option value="employer">Employer</option></select></label>
-                    <button type="submit">Continue</button>
-                </form>
-            )}
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f3f4f6',
+                minHeight: 'calc(100vh - 140px)',
+            }}
+        >
+            <Container maxWidth="md">
+                <Paper
+                    elevation={3}
+                    sx={{
+                        borderRadius: '16px',
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        border: '4px solid #282c34',
+                        mx: 'auto',
+                        p: 3,
+                    }}
+                >
+                    <Box sx={{ mb: 4 }}>
+                        <Stepper activeStep={step - 1} alternativeLabel>
+                            {steps.map((label) => (
+                                <Step key={label}>
+                                    <StepLabel>{label}</StepLabel>
+                                </Step>
+                            ))}
+                        </Stepper>
+                    </Box>
 
-            {step === 2 && (
-                <form onSubmit={handleSubmitProfile}>
-                    <h2>Complete Your Profile</h2>
-                    <label>Age: <input className="first-label" type="number" name="age" value={profileData.age} onChange={handleChange(setProfileData)} placeholder="Enter your age" min="0" required /></label>
-                    <label>Bio: <textarea name="bio" placeholder="Tell us about yourself" value={profileData.bio} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Skills: <input type="text" name="skills" placeholder="e.g. JavaScript, React" value={profileData.skills} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Experience: <textarea name="experience" placeholder="Describe your work experience" value={profileData.experience} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Location: <input type="text" name="location" placeholder="City, Country" value={profileData.location} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Education: <textarea name="education" placeholder="Your academic background" value={profileData.education} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Certifications: <input type="text" name="certifications" placeholder="e.g. AWS, PMP" value={profileData.certifications} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Languages: <input type="text" name="languages" placeholder="e.g. English, Spanish" value={profileData.languages} onChange={handleChange(setProfileData)} required /></label>
-                    <label>CV Link: <input type="text" name="cv" placeholder="yourcv.com" value={profileData.cv_link} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Social Links: <input type="text" name="social_links" placeholder="LinkedIn, GitHub" value={profileData.social_links} onChange={handleChange(setProfileData)} required /></label>
-                    <label>Website: <input type="text" name="website" placeholder="yourportfolio.com" value={profileData.website} onChange={handleChange(setProfileData)} /></label>
-                    <button type="submit">Next</button>
-                </form>
-            )}
+                    {errorMessage && (
+                        <Alert severity="error" sx={{ mb: 3 }}>
+                            {errorMessage}
+                        </Alert>
+                    )}
 
-            {step === 3 && userData.role === 'candidate' && (
-                <form onSubmit={handleSubmitCandidate}>
-                    <h2>Candidate Details</h2>
-                    <label>Cover Letter: <textarea name="cover_letter" placeholder="Write your cover letter" value={candidateData.cover_letter} onChange={handleChange(setCandidateData)} required /></label>
-                    <button type="submit">Finish</button>
-                </form>
-            )}
+                    {step === 1 && (
+                        <Box component="form" onSubmit={handleSubmitUser}>
+                            <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
+                                Register - Basic Information
+                            </Typography>
 
-            {step === 3 && userData.role === 'employer' && (
-                <form onSubmit={handleSubmitEmployer}>
-                    <h2>Company Details</h2>
-                    <label>Company Name: <input type="text" name="company_name" placeholder="Company Inc." value={companyData.company_name} onChange={handleChange(setCompanyData)} required /></label>
-                    <label>Industry: <input type="text" name="industry" placeholder="e.g. Technology, Finance" value={companyData.industry} onChange={handleChange(setCompanyData)} required /></label>
-                    <label>Founded Year: <input type="number" name="founded_year" placeholder="2005" value={companyData.founded_year} onChange={handleChange(setCompanyData)} required /></label>
-                    <label>Company Location: <input type="text" name="company_location" placeholder="Headquarters location" value={companyData.company_location} onChange={handleChange(setCompanyData)} required /></label>
-                    <label>Description: <textarea name="description" placeholder="Brief description of your company" value={companyData.description} onChange={handleChange(setCompanyData)} required /></label>
-                    <button type="submit">Next</button>
-                </form>
-            )}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="First Name"
+                                    type="text"
+                                    name="first_name"
+                                    value={userData.first_name}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
 
-            {step === 4 && (
-                <form onSubmit={handleSubmitJob}>
-                    <h2>Post a Job</h2>
-                    <label>Job Title:<input type="text" name="title" placeholder="e.g. Frontend Developer" value={jobData.title} onChange={handleChange(setJobData)} required /></label>
-                    <label>Description:<textarea name="description" placeholder="Job description and responsibilities" value={jobData.description} onChange={handleChange(setJobData)} required /></label>
-                    <label>Location:<input type="text" name="location" placeholder="e.g. New York, USA" value={jobData.location} onChange={handleChange(setJobData)} required /></label>
-                    <label>Skills Required:<input type="text" name="skills_required" placeholder="e.g. JavaScript, React, Node.js" value={jobData.skills_required} onChange={handleChange(setJobData)} required /></label>
-                    <label>Salary:<input type="number" name="salary" placeholder="e.g. 60000" value={jobData.salary} onChange={handleChange(setJobData)} required /></label>
-                    <label>Job Type:<select name="job_type" value={jobData.job_type} onChange={handleChange(setJobData)} required> <option value="full-time">Full-time</option> <option value="part-time">Part-time</option> <option value="contract">Contract</option> </select></label>
-                    <label>Remote Option:<select name="remote_option" value={jobData.remote_option ? "true" : "false"} onChange={(e) => setJobData({ ...jobData, job_remote_option: e.target.value === "true" })} required><option value="true">Yes</option><option value="false">No</option></select></label>
-                    <label>Category: <input type="text" name="category" placeholder="e.g. Data Science, Marketing" value={jobData.category} onChange={handleChange(setJobData)} required /></label>
-                    <button type="button" onClick={handlePostAnotherJob}> Post Another Job </button>
-                    <button type="submit">Finish</button>
-                </form>
-            )}
-        </div>
+                                <TextField
+                                    label="Last Name"
+                                    type="text"
+                                    name="last_name"
+                                    value={userData.last_name}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Email"
+                                    type="email"
+                                    name="email"
+                                    value={userData.email}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Password"
+                                    type="password"
+                                    name="password"
+                                    value={userData.password}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Phone Number"
+                                    type="text"
+                                    name="phone_number"
+                                    value={userData.phone_number}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Date of Birth"
+                                    type="date"
+                                    name="date_of_birth"
+                                    value={userData.date_of_birth}
+                                    onChange={handleChange(setUserData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{
+                                        sx: { color: 'black' }
+                                    }}
+                                    InputLabelProps={{
+                                        sx: { color: 'black' },
+                                        shrink: true
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel sx={{ color: 'black' }}>Role</InputLabel>
+                                    <Select
+                                        name="role"
+                                        value={userData.role}
+                                        onChange={handleChange(setUserData)}
+                                        label="Role"
+                                        sx={{
+                                            color: 'black',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                        }}
+                                    >
+                                        <MenuItem value="candidate">Candidate</MenuItem>
+                                        <MenuItem value="employer">Employer</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={loading}
+                                    sx={{
+                                        mt: 2,
+                                        py: 1.5,
+                                        backgroundColor: '#b4f000 !important',
+                                        color: '#282c34 !important',
+                                        '&:hover': {
+                                            backgroundColor: '#a0d600 !important',
+                                        },
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderRadius: '8px',
+                                    }}
+                                >
+                                    {loading ? 'Creating Account...' : 'Continue'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {step === 2 && (
+                        <Box component="form" onSubmit={handleSubmitProfile}>
+                            <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
+                                Complete Your Profile
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="Age"
+                                    type="number"
+                                    name="age"
+                                    value={profileData.age}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Bio"
+                                    multiline
+                                    rows={4}
+                                    name="bio"
+                                    value={profileData.bio}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Skills"
+                                    type="text"
+                                    name="skills"
+                                    value={profileData.skills}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Experience"
+                                    multiline
+                                    rows={4}
+                                    name="experience"
+                                    value={profileData.experience}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Location"
+                                    type="text"
+                                    name="location"
+                                    value={profileData.location}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Education"
+                                    multiline
+                                    rows={4}
+                                    name="education"
+                                    value={profileData.education}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Certifications"
+                                    type="text"
+                                    name="certifications"
+                                    value={profileData.certifications}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Languages"
+                                    type="text"
+                                    name="languages"
+                                    value={profileData.languages}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="CV Link"
+                                    type="text"
+                                    name="cv"
+                                    value={profileData.cv}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Social Links"
+                                    type="text"
+                                    name="social_links"
+                                    value={profileData.social_links}
+                                    onChange={handleChange(setProfileData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Website"
+                                    type="text"
+                                    name="website"
+                                    value={profileData.website}
+                                    onChange={handleChange(setProfileData)}
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={loading}
+                                    sx={{
+                                        mt: 2,
+                                        py: 1.5,
+                                        backgroundColor: '#b4f000 !important',
+                                        color: '#282c34 !important',
+                                        '&:hover': {
+                                            backgroundColor: '#a0d600 !important',
+                                        },
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderRadius: '8px',
+                                    }}
+                                >
+                                    {loading ? 'Saving Profile...' : 'Next'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {step === 3 && userData.role === 'candidate' && (
+                        <Box component="form" onSubmit={handleSubmitCandidate}>
+                            <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
+                                Candidate Details
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="Cover Letter"
+                                    multiline
+                                    rows={6}
+                                    name="cover_letter"
+                                    value={candidateData.cover_letter}
+                                    onChange={handleChange(setCandidateData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={loading}
+                                    sx={{
+                                        mt: 2,
+                                        py: 1.5,
+                                        backgroundColor: '#b4f000 !important',
+                                        color: '#282c34 !important',
+                                        '&:hover': {
+                                            backgroundColor: '#a0d600 !important',
+                                        },
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderRadius: '8px',
+                                    }}
+                                >
+                                    {loading ? 'Creating Profile...' : 'Finish Registration'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {step === 3 && userData.role === 'employer' && (
+                        <Box component="form" onSubmit={handleSubmitEmployer}>
+                            <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
+                                Company Details
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="Company Name"
+                                    type="text"
+                                    name="company_name"
+                                    value={companyData.company_name}
+                                    onChange={handleChange(setCompanyData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Industry"
+                                    type="text"
+                                    name="industry"
+                                    value={companyData.industry}
+                                    onChange={handleChange(setCompanyData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Founded Year"
+                                    type="number"
+                                    name="founded_year"
+                                    value={companyData.founded_year}
+                                    onChange={handleChange(setCompanyData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Company Location"
+                                    type="text"
+                                    name="company_location"
+                                    value={companyData.company_location}
+                                    onChange={handleChange(setCompanyData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Description"
+                                    multiline
+                                    rows={4}
+                                    name="description"
+                                    value={companyData.description}
+                                    onChange={handleChange(setCompanyData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={loading}
+                                    sx={{
+                                        mt: 2,
+                                        py: 1.5,
+                                        backgroundColor: '#b4f000 !important',
+                                        color: '#282c34 !important',
+                                        '&:hover': {
+                                            backgroundColor: '#a0d600 !important',
+                                        },
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderRadius: '8px',
+                                    }}
+                                >
+                                    {loading ? 'Creating Company...' : 'Next'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {step === 4 && (
+                        <Box component="form" onSubmit={handleSubmitJob}>
+                            <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold', color: '#333' }}>
+                                Post Your First Job
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="Job Title"
+                                    type="text"
+                                    name="title"
+                                    value={jobData.title}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Description"
+                                    multiline
+                                    rows={4}
+                                    name="description"
+                                    value={jobData.description}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Location"
+                                    type="text"
+                                    name="location"
+                                    value={jobData.location}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Skills Required"
+                                    type="text"
+                                    name="skills_required"
+                                    value={jobData.skills_required}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <TextField
+                                    label="Salary"
+                                    type="number"
+                                    name="salary"
+                                    value={jobData.salary}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel sx={{ color: 'black' }}>Job Type</InputLabel>
+                                    <Select
+                                        name="job_type"
+                                        value={jobData.job_type}
+                                        onChange={handleChange(setJobData)}
+                                        label="Job Type"
+                                        sx={{
+                                            color: 'black',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                        }}
+                                    >
+                                        <MenuItem value="full-time">Full-time</MenuItem>
+                                        <MenuItem value="part-time">Part-time</MenuItem>
+                                        <MenuItem value="contract">Contract</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel sx={{ color: 'black' }}>Remote Option</InputLabel>
+                                    <Select
+                                        name="remote_option"
+                                        value={jobData.remote_option ? "true" : "false"}
+                                        onChange={(e) => setJobData({ ...jobData, remote_option: e.target.value === "true" })}
+                                        label="Remote Option"
+                                        sx={{
+                                            color: 'black',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                        }}
+                                    >
+                                        <MenuItem value="true">Yes</MenuItem>
+                                        <MenuItem value="false">No</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                <TextField
+                                    label="Category"
+                                    type="text"
+                                    name="category"
+                                    value={jobData.category}
+                                    onChange={handleChange(setJobData)}
+                                    required
+                                    variant="outlined"
+                                    fullWidth
+                                    InputProps={{ sx: { color: 'black' } }}
+                                    InputLabelProps={{ sx: { color: 'black' } }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#282c34',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'secondary.main',
+                                            },
+                                            '&.Mui-focused .MuiInputLabel-root': {
+                                                color: 'black !important',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'black !important',
+                                        },
+                                    }}
+                                />
+
+                                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                                    <Button
+                                        type="button"
+                                        onClick={handlePostAnotherJob}
+                                        variant="outlined"
+                                        sx={{
+                                            flex: 1,
+                                            py: 1.5,
+                                            color: '#282c34',
+                                            borderColor: '#282c34',
+                                            '&:hover': {
+                                                borderColor: 'secondary.main',
+                                                backgroundColor: 'rgba(180, 240, 0, 0.1)',
+                                            },
+                                            textTransform: 'none',
+                                            fontWeight: 'bold',
+                                            borderRadius: '8px',
+                                        }}
+                                    >
+                                        Post Another Job
+                                    </Button>
+
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        disabled={loading}
+                                        sx={{
+                                            flex: 1,
+                                            py: 1.5,
+                                            backgroundColor: '#b4f000 !important',
+                                            color: '#282c34 !important',
+                                            '&:hover': {
+                                                backgroundColor: '#a0d600 !important',
+                                            },
+                                            textTransform: 'none',
+                                            fontWeight: 'bold',
+                                            borderRadius: '8px',
+                                        }}
+                                    >
+                                        {loading ? 'Posting Job...' : 'Finish Registration'}
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
+                </Paper>
+            </Container>
+        </Box>
     );
 }
 

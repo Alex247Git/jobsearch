@@ -1,10 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from './socket';
-import './Jobs.css';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Container,
+    Paper,
+    Card,
+    CardContent,
+    CardActions,
+    Grid,
+    Slider,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Chip,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    useTheme,
+    useMediaQuery,
+    IconButton,
+    Tooltip,
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import BusinessIcon from '@mui/icons-material/Business';
+import StarIcon from '@mui/icons-material/Star';
+import MessageIcon from '@mui/icons-material/Message';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import SendIcon from '@mui/icons-material/Send';
 
 function Jobs({ user }) {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
     const [jobs, setJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
     const [appliedJobs, setAppliedJobs] = useState([]);
@@ -12,13 +52,13 @@ function Jobs({ user }) {
     const [selectedEmployer, setSelectedEmployer] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [minSalary, setMinSalary] = useState(0);
-    const [maxSalary, setMaxSalary] = useState(1000000);
+    const [salaryRange, setSalaryRange] = useState([0, 1000000]);
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [jobType, setJobType] = useState("");
     const [recommendedJobs, setRecommendedJobs] = useState([]);
     const [companyRatings, setCompanyRatings] = useState([]);
-    const [showCategories, setShowCategories] = useState(false);
+    const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+
     const jobCategories = [
         "Engineering", "Marketing", "Sales", "Finance", "Information Technology", "Customer Service",
         "Healthcare", "Education", "Human Resources", "Project Management", "Design",
@@ -26,7 +66,6 @@ function Jobs({ user }) {
         "Data Science", "Consulting", "Product Management", "Manufacturing",
         "Logistics", "Quality Assurance", "Public Relations", "Writing", "Other"
     ];
-
 
     useEffect(() => {
         fetch('http://localhost:5000/jobs')
@@ -187,18 +226,14 @@ function Jobs({ user }) {
     };
 
     const handleSelectEmployer = (job) => {
-        if (selectedEmployer && selectedEmployer.job_id === job.job_id) {
-            setSelectedEmployer(null);
-        } else {
-            setSelectedEmployer(job);
-            setMessageText("");
+        setSelectedEmployer(job);
+        setMessageText("");
+        setMessageDialogOpen(true);
 
-            if (user?.user_id && job?.employer_id) {
-                fetchChatHistory(user.user_id, job.employer_id);
-            }
+        if (user?.user_id && job?.employer_id) {
+            fetchChatHistory(user.user_id, job.employer_id);
         }
     };
-
 
     const handleSendMessage = () => {
         if (!user?.user_id || !selectedEmployer || !messageText.trim()) {
@@ -231,7 +266,6 @@ function Jobs({ user }) {
             });
     };
 
-
     const handleCategoryChange = (category) => {
         setSelectedCategories((prevCategories) =>
             prevCategories.includes(category)
@@ -242,11 +276,10 @@ function Jobs({ user }) {
 
     const filteredJobs = jobs.filter(job =>
         (searchQuery.trim() === "" || job.title?.toLowerCase().includes(searchQuery.toLowerCase()) || job.company_name?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-        (!isNaN(job.salary) && job.salary >= minSalary && job.salary <= maxSalary) &&
+        (!isNaN(job.salary) && job.salary >= salaryRange[0] && job.salary <= salaryRange[1]) &&
         (selectedCategories.length === 0 || selectedCategories.includes(job.category)) &&
         (jobType === "" || job.job_type?.toLowerCase() === jobType.toLowerCase())
     );
-
 
     const getCompanyRating = (companyId) => {
         const ratingsForCompany = companyRatings.filter(r => r.company_id === companyId);
@@ -256,259 +289,423 @@ function Jobs({ user }) {
     };
 
     const renderStars = (rating) => {
-        if (!rating) return '';
+        if (!rating) return null;
         const fullStars = Math.floor(rating);
         const halfStar = rating - fullStars >= 0.5;
         const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
 
         return (
-            <>
-                {'★'.repeat(fullStars)}
-                {halfStar && '½'}
-                {'☆'.repeat(emptyStars)}
-            </>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {[...Array(fullStars)].map((_, i) => (
+                    <StarIcon key={`full-${i}`} sx={{ color: '#ffc107', fontSize: 16 }} />
+                ))}
+                {halfStar && <StarIcon sx={{ color: '#ffc107', fontSize: 16, opacity: 0.5 }} />}
+                {[...Array(emptyStars)].map((_, i) => (
+                    <StarIcon key={`empty-${i}`} sx={{ color: '#e0e0e0', fontSize: 16 }} />
+                ))}
+            </Box>
         );
     };
 
-
-
     return (
-        <div className="jobs-container">
-            <h1>Explore Job Opportunities</h1>
-            <div className="jobs-layout">
+        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 140px)', backgroundColor: '#f3f4f6' }}>
+            {/* Sidebar */}
+            <Box
+                sx={{
+                    width: 320,
+                    flexShrink: 0,
+                    backgroundColor: 'background.paper',
+                    borderRight: '1px solid',
+                    borderColor: 'divider',
+                    overflowY: 'auto',
+                    height: '100%',
+                }}
+            >
+                <Box sx={{ p: 3 }}>
+                    {/* Search Section */}
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'white' }}>
+                        Search Jobs
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        placeholder="Search jobs by title or company..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        variant="outlined"
+                        sx={{ mb: 3, '& .MuiOutlinedInput-root': { color: 'greenyellow' }, '& .MuiInputLabel-root': { color: 'greenyellow' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' } }}
+                        InputProps={{
+                            style: { color: 'white' }
+                        }}
+                        InputLabelProps={{
+                            style: { color: 'white' }
+                        }}
+                    />
 
-                <div className="sidebar">
-                    <div className="search-section">
-                        <h3>Search Jobs</h3>
-                        <input
-                            type="text"
-                            placeholder="Search jobs by title or company..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="search-bar"
+                    {/* Filters */}
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'white' }}>
+                        Filters
+                    </Typography>
+
+                    {/* Salary Range */}
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ mb: 1, color: 'greenyellow' }}>
+                            Salary Range: ${salaryRange[0].toLocaleString()} - ${salaryRange[1].toLocaleString()}
+                        </Typography>
+                        <Slider
+                            value={salaryRange}
+                            onChange={(event, newValue) => setSalaryRange(newValue)}
+                            valueLabelDisplay="auto"
+                            min={0}
+                            max={1000000}
+                            step={1000}
+                            sx={{
+                                color: 'greenyellow',
+                                '& .MuiSlider-thumb': {
+                                    backgroundColor: 'greenyellow',
+                                },
+                                '& .MuiSlider-track': {
+                                    backgroundColor: 'greenyellow',
+                                },
+                                '& .MuiSlider-rail': {
+                                    backgroundColor: 'greenyellow',
+                                },
+                            }}
                         />
-                    </div>
-                    <h3>Filters</h3>
-                    <div className="filter-section">
-                        <label>Salary Range:</label>
-                        <p>
-                            ${minSalary.toLocaleString()} - ${maxSalary.toLocaleString()}
-                        </p>
-                        <div className="salary-slider">
-                            <input
-                                type="range"
-                                min="0"
-                                max="1000000"
-                                step="1000"
-                                value={minSalary}
-                                onChange={(e) => {
-                                    const value = Number(e.target.value);
-                                    if (value <= maxSalary) setMinSalary(value);
-                                }}
-                            />
-                            <input
-                                type="range"
-                                min="0"
-                                max="1000000"
-                                step="1000"
-                                value={maxSalary}
-                                onChange={(e) => {
-                                    const value = Number(e.target.value);
-                                    if (value >= minSalary) setMaxSalary(value);
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <div className="filter-section categories-section">
-                        <label>Categories:</label>
-                        <div className="dropdown">
-                            <button
-                                className="dropdown-toggle"
-                                onClick={() => setShowCategories(!showCategories)}
-                            >
-                                Select Categories ▼
-                            </button>
-                            {showCategories && (
-                                <div className="dropdown-menu">
-                                    {jobCategories.map(category => (
-                                        <label key={category} className="category-item">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedCategories.includes(category)}
-                                                onChange={() => handleCategoryChange(category)}
-                                            />
-                                            {category}
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="filter-section">
-                        <label>Job Type:</label>
-                        <select value={jobType} onChange={(e) => setJobType(e.target.value)}>
-                            <option value="">All</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Internship">Internship</option>
-                        </select>
-                    </div>
-                </div>
+                    </Box>
 
-                <div className="job-listings">
+                    {/* Categories */}
+                    <Accordion sx={{ mb: 2, '& .MuiAccordionSummary-root': { color: 'white' }, '& .MuiAccordionDetails-root': { color: 'white' } }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
+                            <Typography variant="subtitle1" sx={{ color: 'white' }}>Categories</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {jobCategories.map(category => (
+                                    <Chip
+                                        key={category}
+                                        label={category}
+                                        onClick={() => handleCategoryChange(category)}
+                                        color="white"
+                                        variant={selectedCategories.includes(category) ? 'filled' : 'outlined'}
+                                        size="small"
+                                        sx={{
+                                            color: selectedCategories.includes(category) ? 'white' : 'white',
+                                            borderColor: 'white',
+                                            backgroundColor: selectedCategories.includes(category) ? 'greenyellow' : 'transparent',
+                                            '& .MuiChip-label': { color: 'white' },
+                                            '&:hover': {
+                                                backgroundColor: selectedCategories.includes(category) ? 'greenyellow' : 'rgba(255, 255, 255, 0.1)',
+                                            }
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                        </AccordionDetails>
+                    </Accordion>
 
+                    {/* Job Type */}
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel sx={{ color: 'white' }}>Job Type</InputLabel>
+                        <Select
+                            value={jobType}
+                            onChange={(e) => setJobType(e.target.value)}
+                            label="Job Type"
+                            sx={{
+                                color: 'white',
+                                '& .MuiSelect-icon': { color: 'white' },
+                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                '& .MuiSelect-select': { color: 'white' }
+                            }}
+                        >
+                            <MenuItem value="">All</MenuItem>
+                            <MenuItem value="Full-time">Full-time</MenuItem>
+                            <MenuItem value="Part-time">Part-time</MenuItem>
+                            <MenuItem value="Internship">Internship</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
+            </Box>
+
+            {/* Main Content */}
+            <Box
+                sx={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    height: '100%',
+                }}
+            >
+                <Container maxWidth="xl" sx={{ py: 4 }}>
+                    <Typography
+                        variant={isMobile ? 'h4' : 'h3'}
+                        component="h1"
+                        sx={{
+                            mb: 4,
+                            textAlign: 'center',
+                            fontWeight: 'bold',
+                            color: 'text.primary',
+                        }}
+                    >
+                        Explore Job Opportunities
+                    </Typography>
+
+                    {/* Job Listings */}
+                    {/* Recommended Jobs */}
                     {recommendedJobs.length > 0 && (
-                        <div className="recommended-slider">
-                            <h2>🔍 Recommended for You</h2>
-                            <div className="slider-track">
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
+                                🔍 Recommended for You
+                            </Typography>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    gap: 2,
+                                    overflowX: 'auto',
+                                    pb: 2,
+                                    '&::-webkit-scrollbar': {
+                                        height: 6,
+                                    },
+                                    '&::-webkit-scrollbar-track': {
+                                        backgroundColor: '#f1f1f1',
+                                        borderRadius: 3,
+                                    },
+                                    '&::-webkit-scrollbar-thumb': {
+                                        backgroundColor: 'primary.main',
+                                        borderRadius: 3,
+                                    },
+                                }}
+                            >
                                 {recommendedJobs.map((job) => (
-                                    <div
-                                        className="job-card recommended"
+                                    <Card
                                         key={`recommended-${job.job_id}`}
+                                        sx={{
+                                            minWidth: 300,
+                                            cursor: 'pointer',
+                                            transition: 'transform 0.2s',
+                                            '&:hover': {
+                                                transform: 'translateY(-4px)',
+                                                boxShadow: theme.shadows[8],
+                                            },
+                                            border: '2px solid #ffc107',
+                                        }}
                                         onClick={(e) => {
                                             if (!e.target.closest("button")) {
                                                 navigate(`/job/${job.job_id}`);
                                             }
                                         }}
                                     >
-                                        <h2>{job.title} 🌟</h2>
-                                        <div className="recommendation-score">
-                                            <strong>🔢 Recommendation Score:</strong>
-                                            <div className="score-value">
-                                                {job.score ? `${Number(job.score).toFixed(2)} / 10` : "N/A"}
-                                            </div>
-                                        </div>
-                                        <p><strong>Company:</strong> {job.company_name}</p>
-                                        <p className="rating-container">
-                                            <span className="stars">
-                                                {getCompanyRating(job.company_id)
-                                                    ? renderStars(getCompanyRating(job.company_id))
-                                                    : '☆☆☆☆☆'}
-                                            </span>
-                                            <span className="rating-text">
-                                                {getCompanyRating(job.company_id)
-                                                    ? `${getCompanyRating(job.company_id)} / 5`
-                                                    : 'No ratings yet'}
-                                            </span>
-                                        </p>
-                                        <p><strong>Location:</strong> {job.location}</p>
-                                        <p><strong>Category:</strong> {job.category}</p>
-                                        <p><strong>Type:</strong> {job.job_type}</p>
-                                        <p><strong>Remote: </strong> {job.remote_option === 1 ? 'Yes' : 'No'}</p>
-                                        <p><strong>Salary:</strong> {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}</p>
-                                        <p><strong>Description:</strong> {job.description}</p>
-                                        <div className="job-buttons">
-                                            <button
-                                                className="apply-btn"
+                                        <CardContent>
+                                            <Typography variant="h6" sx={{ mb: 1, color: '#ffc107' }}>
+                                                {job.title} 🌟
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                                🔢 Recommendation Score: {job.score ? `${Number(job.score).toFixed(2)} / 10` : "N/A"}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <BusinessIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">{job.company_name}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                {renderStars(getCompanyRating(job.company_id))}
+                                                <Typography variant="body2" sx={{ ml: 1 }}>
+                                                    {getCompanyRating(job.company_id) ? `${getCompanyRating(job.company_id)} / 5` : 'No ratings yet'}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <LocationOnIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">{job.location}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <AttachMoneyIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">
+                                                    {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}
+                                                </Typography>
+                                            </Box>
+                                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                                <strong>Type:</strong> {job.job_type}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                                <strong>Remote:</strong> {job.remote_option === 1 ? 'Yes' : 'No'}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                {job.description}
+                                            </Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                fullWidth
                                                 onClick={() => handleApplication(job.job_id)}
                                                 disabled={appliedJobs.includes(job.job_id)}
                                             >
                                                 {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                                            </button>
-                                            <button
-                                                className="message-btn"
-                                                onClick={() => handleSelectEmployer(job)}
-                                            >
-                                                ✉️ Message Employer
-                                            </button>
-                                            <button
-                                                className="save-btn"
-                                                onClick={() => handleSaveJob(job.job_id)}
-                                                disabled={savedJobs.includes(job.job_id)}
-                                            >
-                                                {savedJobs.includes(job.job_id) ? 'Saved ❤️' : 'Save'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    <div className="jobs-container">
-                        <h1>All Jobs</h1> 
-                        <div className="jobs-layout">
-                            <div className="job-listings">
-                                {filteredJobs.length > 0 ? (
-                                    filteredJobs.map((job) => (
-                                        <div
-                                            className="job-card"
-                                            key={`job-${job.job_id}`}
-                                            onClick={(e) => {
-                                                if (!e.target.closest("button")) {
-                                                    navigate(`/job/${job.job_id}`);
-                                                }
-                                            }}
-                                        >
-                                            <h2>{job.title}</h2>
-                                            <p><strong>Company:</strong> {job.company_name}</p>
-                                            <p className="rating-container">
-                                                <span className="stars">
-                                                    {getCompanyRating(job.company_id)
-                                                        ? renderStars(getCompanyRating(job.company_id))
-                                                        : '☆☆☆☆☆'}
-                                                </span>
-                                                <span className="rating-text">
-                                                    {getCompanyRating(job.company_id)
-                                                        ? `${getCompanyRating(job.company_id)} / 5`
-                                                        : 'No ratings yet'}
-                                                </span>
-                                            </p>
-                                            <p><strong>Location:</strong> {job.location}</p>
-                                            <p><strong>Category:</strong> {job.category}</p>
-                                            <p><strong>Type:</strong> {job.job_type}</p>
-                                            <p><strong>Remote: </strong> {job.remote_option === 1 ? 'Yes' : 'No'}</p>
-                                            <p><strong>Salary:</strong> {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}</p>
-                                            <p><strong>Description:</strong> {job.description}</p>
-                                            <div className="job-buttons">
-                                                <button
-                                                    className="apply-btn"
-                                                    onClick={() => handleApplication(job.job_id)}
-                                                    disabled={appliedJobs.includes(job.job_id)}
-                                                >
-                                                    {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                                                </button>
-                                                <button
-                                                    className="message-btn"
+                                            </Button>
+                                            <Tooltip title="Message Employer">
+                                                <IconButton
+                                                    color="primary"
                                                     onClick={() => handleSelectEmployer(job)}
                                                 >
-                                                    ✉️ Message Employer
-                                                </button>
-                                                <button
-                                                    className="save-btn"
+                                                    <MessageIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={savedJobs.includes(job.job_id) ? 'Saved' : 'Save Job'}>
+                                                <IconButton
+                                                    color={savedJobs.includes(job.job_id) ? 'secondary' : 'default'}
                                                     onClick={() => handleSaveJob(job.job_id)}
                                                     disabled={savedJobs.includes(job.job_id)}
                                                 >
-                                                    {savedJobs.includes(job.job_id) ? 'Saved ❤️' : 'Save'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p>No jobs found.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {selectedEmployer && (
-                <div className="message-modal">
-                    <div className="modal-content">
-                        <h3>Sending a message to employer for job: <strong>{selectedEmployer.title}</strong></h3>
-                        <textarea
-                            placeholder="Type your message..."
+                                                    {savedJobs.includes(job.job_id) ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                                                </IconButton>
+                                            </Tooltip>
+                                        </CardActions>
+                                    </Card>
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
+
+                    {/* All Jobs */}
+                    <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
+                        All Jobs
+                    </Typography>
+
+                    {filteredJobs.length > 0 ? (
+                        <Grid container spacing={3} sx={{ px: 0 }}>
+                            {filteredJobs.map((job) => (
+                                <Grid item xs={12} sm={6} md={4} key={`job-${job.job_id}`}>
+                                    <Card
+                                        sx={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            cursor: 'pointer',
+                                            transition: 'transform 0.2s',
+                                            '&:hover': {
+                                                transform: 'translateY(-4px)',
+                                                boxShadow: theme.shadows[8],
+                                            },
+                                        }}
+                                        onClick={(e) => {
+                                            if (!e.target.closest("button")) {
+                                                navigate(`/job/${job.job_id}`);
+                                            }
+                                        }}
+                                    >
+                                        <CardContent sx={{ flexGrow: 1 }}>
+                                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                                                {job.title}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <BusinessIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">{job.company_name}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                {renderStars(getCompanyRating(job.company_id))}
+                                                <Typography variant="body2" sx={{ ml: 1 }}>
+                                                    {getCompanyRating(job.company_id) ? `${getCompanyRating(job.company_id)} / 5` : 'No ratings yet'}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <LocationOnIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">{job.location}</Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                <AttachMoneyIcon sx={{ mr: 1, fontSize: 16 }} />
+                                                <Typography variant="body2">
+                                                    {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}
+                                                </Typography>
+                                            </Box>
+                                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                                <strong>Type:</strong> {job.job_type}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                                <strong>Remote:</strong> {job.remote_option === 1 ? 'Yes' : 'No'}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                {job.description}
+                                            </Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                fullWidth
+                                                onClick={() => handleApplication(job.job_id)}
+                                                disabled={appliedJobs.includes(job.job_id)}
+                                            >
+                                                {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
+                                            </Button>
+                                            <Tooltip title="Message Employer">
+                                                <IconButton
+                                                    color="primary"
+                                                    onClick={() => handleSelectEmployer(job)}
+                                                >
+                                                    <MessageIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={savedJobs.includes(job.job_id) ? 'Saved' : 'Save Job'}>
+                                                <IconButton
+                                                    color={savedJobs.includes(job.job_id) ? 'secondary' : 'default'}
+                                                    onClick={() => handleSaveJob(job.job_id)}
+                                                    disabled={savedJobs.includes(job.job_id)}
+                                                >
+                                                    {savedJobs.includes(job.job_id) ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                                                </IconButton>
+                                            </Tooltip>
+                                        </CardActions>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    ) : (
+                        <Paper sx={{ p: 4, textAlign: 'center' }}>
+                            <Typography variant="h6" color="text.secondary">
+                                No jobs found matching your criteria.
+                            </Typography>
+                        </Paper>
+                    )}
+
+                </Container>
+
+                {/* Message Dialog */}
+                <Dialog
+                    open={messageDialogOpen}
+                    onClose={() => setMessageDialogOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        Message Employer for: {selectedEmployer?.title}
+                    </DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Your Message"
+                            fullWidth
+                            multiline
+                            rows={4}
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
-                            rows="5"
-                            className="message-textarea"
+                            placeholder="Type your message to the employer..."
                         />
-                        <button onClick={handleSendMessage}>Send Message</button>
-                        <button onClick={() => setSelectedEmployer(null)}>Close</button>
-                    </div>
-                </div>
-            )}
-        </div>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setMessageDialogOpen(false)}>Cancel</Button>
+                        <Button
+                            onClick={handleSendMessage}
+                            variant="contained"
+                            startIcon={<SendIcon />}
+                        >
+                            Send Message
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Box>
+        </Box>
     );
-
 }
+
 export default Jobs;

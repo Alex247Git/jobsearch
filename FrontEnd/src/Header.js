@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 import Navbar from './Navbar';
-import './Header.css';
 
 function Header({ isAuthenticated, onLogout, toggleUserRole, userRole, user, employmentInfo }) {
     const navigate = useNavigate();
-
 
     const handleLogoClick = () => {
         if (isAuthenticated) {
@@ -16,22 +15,25 @@ function Header({ isAuthenticated, onLogout, toggleUserRole, userRole, user, emp
     };
 
     return (
-        <header className="header">
-            <div className="header-content">
-                <button
-                    className="logo-button"
-                    onClick={handleLogoClick}
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'inherit',
-                        fontSize: 'inherit',
+        <AppBar position="static" sx={{ backgroundColor: 'secondary.main' }}>
+            <Toolbar>
+                <Typography
+                    variant="h1"
+                    component="div"
+                    sx={{
+                        flexGrow: 0,
                         cursor: 'pointer',
-                        textDecoration: 'none',
+                        color: 'primary.main',
+                        fontWeight: 'bold',
+                        '&:hover': {
+                            color: 'primary.light',
+                        },
                     }}
+                    onClick={handleLogoClick}
                 >
-                    <h1 className="logo">JobSearch</h1>
-                </button>
+                    JobSearch
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
                 <Navbar
                     isAuthenticated={isAuthenticated}
                     onLogout={onLogout}
@@ -40,8 +42,8 @@ function Header({ isAuthenticated, onLogout, toggleUserRole, userRole, user, emp
                     user={user}
                     employmentInfo={employmentInfo}
                 />
-            </div>
-        </header>
+            </Toolbar>
+        </AppBar>
     );
 }
 
