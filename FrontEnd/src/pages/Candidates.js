@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { socket } from './socket';
+import { socket } from '../services/socket';
 import { useNavigate } from 'react-router-dom';
 import './Candidates.css';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Candidates({ user }) {
     const [candidates, setCandidates] = useState([]);

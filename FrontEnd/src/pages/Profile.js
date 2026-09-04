@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./Profile.css";
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Profile({ user }) {
     const { userId: paramUserId } = useParams();

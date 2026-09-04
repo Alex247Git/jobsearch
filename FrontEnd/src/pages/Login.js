@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from './AuthContext';
-import { API_BASE_URL } from './api';
+import { AuthContext } from '../context/AuthContext';
+import { API_BASE_URL } from '../api';
 import {
     Box,
     Typography,

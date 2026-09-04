@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerUser } from './RegisterController';
-import { AuthContext } from './AuthContext';
-import { API_BASE_URL } from './api';
+import { registerUser } from '../services/RegisterController';
+import { AuthContext } from '../context/AuthContext';
+import { API_BASE_URL } from '../api';
 import {
     Box,
     Typography,

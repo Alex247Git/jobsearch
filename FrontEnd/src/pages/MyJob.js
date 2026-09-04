@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import './MyJob.css';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function MyJob({ user }) {
     const [jobInfo, setJobInfo] = useState(null);

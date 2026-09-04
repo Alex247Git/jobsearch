@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import React, { useState } from 'react';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 const Rating = ({ user }) => {
     const { companyId } = useParams();   

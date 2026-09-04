@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./JobDetails.css";
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function JobDetails({ user }) {
     const { jobId } = useParams();

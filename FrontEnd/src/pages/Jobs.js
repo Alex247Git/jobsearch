@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from './socket';
+import { socket } from '../services/socket';
 import {
     Box,
     Typography,
@@ -39,7 +39,7 @@ import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import SendIcon from '@mui/icons-material/Send';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Jobs({ user }) {
     const navigate = useNavigate();

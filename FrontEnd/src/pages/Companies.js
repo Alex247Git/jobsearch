@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import "./Companies.css"; 
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Company() {
     const { companyId } = useParams();

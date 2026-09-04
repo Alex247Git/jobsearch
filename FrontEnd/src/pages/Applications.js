@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Applications.css';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Applications({ user }) {
     const [applications, setApplications] = useState([]);

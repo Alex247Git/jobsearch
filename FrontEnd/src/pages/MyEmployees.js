@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './MyEmployees.css';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 const MyEmployees = () => {
     const [employees, setEmployees] = useState([]);

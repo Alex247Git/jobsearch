@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import { socket, connectSocket, disconnectSocket } from "./socket";
+import { socket, connectSocket, disconnectSocket } from "../services/socket";
 import "./Messages.css";
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from '../api';
 
 function Messages({ user }) {
     const [conversations, setConversations] = useState([]);
