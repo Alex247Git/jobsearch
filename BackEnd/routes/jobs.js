@@ -61,7 +61,6 @@ router.get('/:id', async (req, res) => {
         `;
         const [results] = await db.promise().query(query, [jobId]);
 
-        console.log("DEBUG: job details", results[0]);
 
         if (results.length === 0) {
             return res.status(404).json({ error: `Job with ID ${jobId} not found` });
@@ -77,7 +76,6 @@ router.get('/:id', async (req, res) => {
 // GET jobs by employer id
 router.get('/employer/:employerId', async (req, res) => {
     const { employerId } = req.params;
-    console.log('Received employerId:', employerId);
 
     try {
         const query = `
@@ -89,7 +87,6 @@ router.get('/employer/:employerId', async (req, res) => {
 
         const [results] = await db.promise().query(query, [employerId]);
 
-        console.log('Jobs fetched:', results);
 
         res.status(200).json(results);
     } catch (error) {

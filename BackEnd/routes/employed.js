@@ -26,7 +26,6 @@ router.post("/", async (req, res) => {
 // Get employment records for a specific user with employer and job details
 router.get("/:user_id", async (req, res) => {
     const { user_id } = req.params;
-    console.log(`🔍 Fetching employment record for user_id: ${user_id}`);
 
     try {
         const [rows] = await db.promise().execute(`
@@ -66,7 +65,6 @@ router.get("/:user_id", async (req, res) => {
             return res.json({ employed: null });
         }
 
-        console.log("✅ Employment data with job & company info found:", rows[0]);
         res.json(rows[0]);
     } catch (error) {
         console.error("⚠️ Error fetching employment record:", error);

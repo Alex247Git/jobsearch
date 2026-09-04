@@ -4,7 +4,6 @@ const db = require('../db');
 
 // CREATE user profile
 router.post('/', async (req, res) => {
-    console.log('Received profile data:', req.body);
     const { user_id, bio, skills, experience, location, education, certifications, languages, social_links, cv, availability, website } = req.body;
 
     if (!user_id) {
