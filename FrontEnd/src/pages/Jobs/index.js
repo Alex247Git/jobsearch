@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '../services/socket';
+import { socket } from '../../services/socket';
 import {
     Box,
     Typography,
@@ -39,7 +39,10 @@ import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import SendIcon from '@mui/icons-material/Send';
-import { API_BASE_URL } from '../api';
+import { API_BASE_URL } from '../../api';
+import JobFilters from './JobFilters';
+import JobCard from './JobCard';
+import MessageDialog from './MessageDialog';
 
 function Jobs({ user }) {
     const navigate = useNavigate();
@@ -60,13 +63,6 @@ function Jobs({ user }) {
     const [companyRatings, setCompanyRatings] = useState([]);
     const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
-    const jobCategories = [
-        "Engineering", "Marketing", "Sales", "Finance", "Information Technology", "Customer Service",
-        "Healthcare", "Education", "Human Resources", "Project Management", "Design",
-        "Legal", "Business Development", "Accounting", "Operations", "Administrative",
-        "Data Science", "Consulting", "Product Management", "Manufacturing",
-        "Logistics", "Quality Assurance", "Public Relations", "Writing", "Other"
-    ];
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/jobs`)
@@ -310,124 +306,17 @@ function Jobs({ user }) {
 
     return (
         <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 140px)', backgroundColor: '#f3f4f6' }}>
-            {/* Sidebar */}
-            <Box
-                sx={{
-                    width: 320,
-                    flexShrink: 0,
-                    backgroundColor: 'background.paper',
-                    borderRight: '1px solid',
-                    borderColor: 'divider',
-                    overflowY: 'auto',
-                    height: '100%',
-                }}
-            >
-                <Box sx={{ p: 3 }}>
-                    {/* Search Section */}
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'white' }}>
-                        Search Jobs
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        placeholder="Search jobs by title or company..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        variant="outlined"
-                        sx={{ mb: 3, '& .MuiOutlinedInput-root': { color: 'greenyellow' }, '& .MuiInputLabel-root': { color: 'greenyellow' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' } }}
-                        InputProps={{
-                            style: { color: 'white' }
-                        }}
-                        InputLabelProps={{
-                            style: { color: 'white' }
-                        }}
+                    {/* Sidebar */}
+                    <JobFilters
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        salaryRange={salaryRange}
+                        onSalaryChange={setSalaryRange}
+                        selectedCategories={selectedCategories}
+                        onCategoryChange={handleCategoryChange}
+                        jobType={jobType}
+                        onJobTypeChange={setJobType}
                     />
-
-                    {/* Filters */}
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'white' }}>
-                        Filters
-                    </Typography>
-
-                    {/* Salary Range */}
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle1" sx={{ mb: 1, color: 'greenyellow' }}>
-                            Salary Range: ${salaryRange[0].toLocaleString()} - ${salaryRange[1].toLocaleString()}
-                        </Typography>
-                        <Slider
-                            value={salaryRange}
-                            onChange={(event, newValue) => setSalaryRange(newValue)}
-                            valueLabelDisplay="auto"
-                            min={0}
-                            max={1000000}
-                            step={1000}
-                            sx={{
-                                color: 'greenyellow',
-                                '& .MuiSlider-thumb': {
-                                    backgroundColor: 'greenyellow',
-                                },
-                                '& .MuiSlider-track': {
-                                    backgroundColor: 'greenyellow',
-                                },
-                                '& .MuiSlider-rail': {
-                                    backgroundColor: 'greenyellow',
-                                },
-                            }}
-                        />
-                    </Box>
-
-                    {/* Categories */}
-                    <Accordion sx={{ mb: 2, '& .MuiAccordionSummary-root': { color: 'white' }, '& .MuiAccordionDetails-root': { color: 'white' } }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
-                            <Typography variant="subtitle1" sx={{ color: 'white' }}>Categories</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                {jobCategories.map(category => (
-                                    <Chip
-                                        key={category}
-                                        label={category}
-                                        onClick={() => handleCategoryChange(category)}
-                                        color="white"
-                                        variant={selectedCategories.includes(category) ? 'filled' : 'outlined'}
-                                        size="small"
-                                        sx={{
-                                            color: selectedCategories.includes(category) ? 'white' : 'white',
-                                            borderColor: 'white',
-                                            backgroundColor: selectedCategories.includes(category) ? 'greenyellow' : 'transparent',
-                                            '& .MuiChip-label': { color: 'white' },
-                                            '&:hover': {
-                                                backgroundColor: selectedCategories.includes(category) ? 'greenyellow' : 'rgba(255, 255, 255, 0.1)',
-                                            }
-                                        }}
-                                    />
-                                ))}
-                            </Box>
-                        </AccordionDetails>
-                    </Accordion>
-
-                    {/* Job Type */}
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel sx={{ color: 'white' }}>Job Type</InputLabel>
-                        <Select
-                            value={jobType}
-                            onChange={(e) => setJobType(e.target.value)}
-                            label="Job Type"
-                            sx={{
-                                color: 'white',
-                                '& .MuiSelect-icon': { color: 'white' },
-                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '& .MuiSelect-select': { color: 'white' }
-                            }}
-                        >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="Full-time">Full-time</MenuItem>
-                            <MenuItem value="Part-time">Part-time</MenuItem>
-                            <MenuItem value="Internship">Internship</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Box>
-            </Box>
 
             {/* Main Content */}
             <Box
@@ -575,89 +464,18 @@ function Jobs({ user }) {
                     {filteredJobs.length > 0 ? (
                         <Grid container spacing={3} sx={{ px: 0 }}>
                             {filteredJobs.map((job) => (
-                                <Grid item xs={12} sm={6} md={4} key={`job-${job.job_id}`}>
-                                    <Card
-                                        sx={{
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: theme.shadows[8],
-                                            },
-                                        }}
-                                        onClick={(e) => {
-                                            if (!e.target.closest("button")) {
-                                                navigate(`/job/${job.job_id}`);
-                                            }
-                                        }}
-                                    >
-                                        <CardContent sx={{ flexGrow: 1 }}>
-                                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                                                {job.title}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <BusinessIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.company_name}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                {renderStars(getCompanyRating(job.company_id))}
-                                                <Typography variant="body2" sx={{ ml: 1 }}>
-                                                    {getCompanyRating(job.company_id) ? `${getCompanyRating(job.company_id)} / 5` : 'No ratings yet'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <LocationOnIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.location}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <AttachMoneyIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">
-                                                    {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Type:</strong> {job.job_type}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Remote:</strong> {job.remote_option === 1 ? 'Yes' : 'No'}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                                {job.description}
-                                            </Typography>
-                                        </CardContent>
-                                        <CardActions>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                fullWidth
-                                                onClick={() => handleApplication(job.job_id)}
-                                                disabled={appliedJobs.includes(job.job_id)}
-                                            >
-                                                {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                                            </Button>
-                                            <Tooltip title="Message Employer">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleSelectEmployer(job)}
-                                                >
-                                                    <MessageIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={savedJobs.includes(job.job_id) ? 'Saved' : 'Save Job'}>
-                                                <IconButton
-                                                    color={savedJobs.includes(job.job_id) ? 'secondary' : 'default'}
-                                                    onClick={() => handleSaveJob(job.job_id)}
-                                                    disabled={savedJobs.includes(job.job_id)}
-                                                >
-                                                    {savedJobs.includes(job.job_id) ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                                                </IconButton>
-                                            </Tooltip>
-                                        </CardActions>
-                                    </Card>
-                                </Grid>
+                                <JobCard
+                                    key={`job-${job.job_id}`}
+                                    job={job}
+                                    saved={savedJobs.includes(job.job_id)}
+                                    applied={appliedJobs.includes(job.job_id)}
+                                    rating={getCompanyRating(job.company_id)}
+                                    renderStars={renderStars}
+                                    onOpen={(jobId) => navigate(`/job/${jobId}`)}
+                                    onApply={handleApplication}
+                                    onMessage={handleSelectEmployer}
+                                    onSave={handleSaveJob}
+                                />
                             ))}
                         </Grid>
                     ) : (
@@ -671,39 +489,14 @@ function Jobs({ user }) {
                 </Container>
 
                 {/* Message Dialog */}
-                <Dialog
+                <MessageDialog
                     open={messageDialogOpen}
                     onClose={() => setMessageDialogOpen(false)}
-                    maxWidth="sm"
-                    fullWidth
-                >
-                    <DialogTitle>
-                        Message Employer for: {selectedEmployer?.title}
-                    </DialogTitle>
-                    <DialogContent>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Your Message"
-                            fullWidth
-                            multiline
-                            rows={4}
-                            value={messageText}
-                            onChange={(e) => setMessageText(e.target.value)}
-                            placeholder="Type your message to the employer..."
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setMessageDialogOpen(false)}>Cancel</Button>
-                        <Button
-                            onClick={handleSendMessage}
-                            variant="contained"
-                            startIcon={<SendIcon />}
-                        >
-                            Send Message
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                    title={selectedEmployer?.title}
+                    messageText={messageText}
+                    onMessageChange={setMessageText}
+                    onSend={handleSendMessage}
+                />
             </Box>
         </Box>
     );
