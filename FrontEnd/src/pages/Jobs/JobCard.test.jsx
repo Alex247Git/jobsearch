@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import JobCard from './JobCard';
 
@@ -18,10 +19,10 @@ const defaultProps = {
     applied: false,
     rating: null,
     renderStars: () => null,
-    onOpen: jest.fn(),
-    onApply: jest.fn(),
-    onMessage: jest.fn(),
-    onSave: jest.fn(),
+    onOpen: vi.fn(),
+    onApply: vi.fn(),
+    onMessage: vi.fn(),
+    onSave: vi.fn(),
 };
 
 test('renders the job title and company', () => {

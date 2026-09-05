@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MessageDialog from './MessageDialog';
 
@@ -5,25 +6,25 @@ test('renders the dialog title when open', () => {
     render(
         <MessageDialog
             open
-            onClose={jest.fn()}
+            onClose={vi.fn()}
             title="Frontend Dev"
             messageText=""
-            onMessageChange={jest.fn()}
-            onSend={jest.fn()}
+            onMessageChange={vi.fn()}
+            onSend={vi.fn()}
         />
     );
     expect(screen.getByText(/Frontend Dev/)).toBeInTheDocument();
 });
 
 test('clicking Send Message calls onSend', () => {
-    const onSend = jest.fn();
+    const onSend = vi.fn();
     render(
         <MessageDialog
             open
-            onClose={jest.fn()}
+            onClose={vi.fn()}
             title="Frontend Dev"
             messageText="Hello"
-            onMessageChange={jest.fn()}
+            onMessageChange={vi.fn()}
             onSend={onSend}
         />
     );
