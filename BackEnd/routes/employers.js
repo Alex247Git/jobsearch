@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 // POST employer
 router.post('/', authenticateToken, async (req, res) => {
@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // UPDATE employer by id
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const employerId = req.params.id;
     const {company_id,job_id } = req.body;
 
@@ -95,7 +95,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE employer by id
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const employerId = req.params.id;
 
     try {

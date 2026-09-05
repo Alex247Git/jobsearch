@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { generateJobRecommendations } = require('../recommendationSystemNew');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST candidate
 router.post('/', authenticateToken, async (req, res) => {
-    const { user_id, cover_letter, availability } = req.body;
+    const { cover_letter, availability } = req.body;
+    const user_id = req.user.user_id; // server-authoritative
     if (!user_id || !cover_letter || availability == null) {
         return res.status(400).json({ error: 'Please provide all required fields except application_id' });
     }

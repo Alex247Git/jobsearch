@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // CREATE user profile
 router.post('/', authenticateToken, async (req, res) => {
-    const { user_id, bio, skills, experience, location, education, certifications, languages, social_links, cv, availability, website } = req.body;
-
-    if (!user_id) {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
+    const { bio, skills, experience, location, education, certifications, languages, social_links, cv, availability, website } = req.body;
+    const user_id = req.user.user_id; // server-authoritative
 
     try {
         const query = `
@@ -48,7 +45,7 @@ router.get('/:userId', authenticateToken, async (req, res) => {
 });
 
 // UPDATE user and profile
-router.put('/:userId', authenticateToken, async (req, res) => {
+router.put('/:userId', authenticateToken, authorizeSelf('userId'), async (req, res) => {
     const userId = req.params.userId;
     const {
         bio, skills, experience, location, education, certifications,
@@ -99,7 +96,7 @@ router.put('/:userId', authenticateToken, async (req, res) => {
 
 
 // DELETE user profile
-router.delete('/:userId', authenticateToken, async (req, res) => {
+router.delete('/:userId', authenticateToken, authorizeSelf('userId'), async (req, res) => {
     const userId = req.params.userId;
 
     try {

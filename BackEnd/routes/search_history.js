@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST new search history entry
 router.post('/', authenticateToken, async (req, res) => {
-    const { candidate_id, keywords, searched_at } = req.body;
+    const { keywords, searched_at } = req.body;
+    const candidate_id = req.user.user_id; // server-authoritative
 
     if (!candidate_id || !keywords || !searched_at) {
         return res.status(400).json({ error: 'Please provide candidate_id, keywords, and searched_at' });
@@ -38,7 +39,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET search history entry by candidate_id
-router.get('/:candidate_id', authenticateToken, async (req, res) => {
+router.get('/:candidate_id', authenticateToken, authorizeSelf('candidate_id'), async (req, res) => {
     const candidateId = req.params.candidate_id;
 
     try {

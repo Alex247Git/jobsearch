@@ -3,10 +3,10 @@ const router = express.Router();
 const db = require('../db');
 const nlp = require('compromise');
 const { generateCandidateRecommendations } = require('../recommendationSystemNew');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
 
 // POST new job
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireRole('employer'), async (req, res) => {
     const { title, company_id, location, description, salary, skills_required, job_type, remote_option, category } = req.body;
     const requiredFields = [title, company_id, location, description, salary, skills_required, job_type, remote_option, category];
     if (requiredFields.some(field => field === undefined || field === null || field === '')) {
@@ -75,7 +75,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // GET jobs by employer id
-router.get('/employer/:employerId', authenticateToken, async (req, res) => {
+router.get('/employer/:employerId', authenticateToken, authorizeSelf('employerId'), async (req, res) => {
     const { employerId } = req.params;
 
     try {
@@ -143,7 +143,7 @@ router.get('/search', async (req, res) => {
 });
 
 // UPDATE job by id
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const jobId = req.params.id;
     const { title, company_id, location, description, salary, created_by, skills_required, job_type, remote_option, category } = req.body;
 
@@ -213,7 +213,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE job by id
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const jobId = req.params.id;
 
     try {

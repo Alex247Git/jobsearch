@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 // POST new company
 router.post('/', authenticateToken, async (req, res) => {
@@ -65,7 +65,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // UPDATE company by id
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const companyId = req.params.id;
     const { company_name, industry, founded_year, location, description } = req.body;
 
@@ -115,7 +115,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE company by id
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole('employer'), async (req, res) => {
     const companyId = req.params.id;
 
     try {

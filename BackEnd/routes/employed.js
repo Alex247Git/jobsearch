@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // Create a new employed record
 router.post("/", authenticateToken, async (req, res) => {
@@ -25,7 +25,7 @@ router.post("/", authenticateToken, async (req, res) => {
 });
 
 // Get employment records for a specific user with employer and job details
-router.get("/:user_id", authenticateToken, async (req, res) => {
+router.get("/:user_id", authenticateToken, authorizeSelf("user_id"), async (req, res) => {
     const { user_id } = req.params;
 
     try {
@@ -74,7 +74,7 @@ router.get("/:user_id", authenticateToken, async (req, res) => {
 });
 
 // GET /employed/employer/:employerId
-router.get('/employer/:employerId', authenticateToken, async (req, res) => {
+router.get('/employer/:employerId', authenticateToken, authorizeSelf('employerId'), async (req, res) => {
     const { employerId } = req.params;
 
     try {
@@ -121,7 +121,7 @@ router.put("/:employed_id", authenticateToken, async (req, res) => {
     }
 });
 
-router.delete('/leavejob/:user_id', authenticateToken, async (req, res) => {
+router.delete('/leavejob/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
