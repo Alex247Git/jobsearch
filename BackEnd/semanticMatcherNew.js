@@ -2,7 +2,7 @@ let extractor;
 
 async function initModel() {
     if (!extractor) {
-        const { pipeline } = await import('@xenova/transformers');
+        const { pipeline } = await import('@huggingface/transformers');
         extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
     }
     return extractor;
