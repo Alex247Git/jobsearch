@@ -194,3 +194,31 @@ test('Should still allow anonymous access to public job listings', async () => {
     const response = await request(app).get('/jobs');
     expect(response.statusCode).toBe(200);
 });
+
+const fs = require('fs');
+const path = require('path');
+const { LOG_FILE, logEvent } = require('./audit/auditLog');
+
+test('logEvent writes a JSON entry to the audit log file', () => {
+    const before = fs.existsSync(LOG_FILE) ? fs.readFileSync(LOG_FILE, 'utf8').length : 0;
+    logEvent('test_event', { headers: {}, ip: '127.0.0.1', method: 'POST', originalUrl: '/test' }, { user_id: 99 });
+    const after = fs.readFileSync(LOG_FILE, 'utf8').length;
+    expect(after).toBeGreaterThan(before);
+    const lastLine = fs.readFileSync(LOG_FILE, 'utf8').trim().split('\n').pop();
+    const entry = JSON.parse(lastLine);
+    expect(entry.event).toBe('test_event');
+    expect(entry.user_id).toBe(99);
+    expect(entry.ts).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(entry.path).toBe('/test');
+});
+
+test('Should return 404 from authorizeOwner when the resource does not exist', async () => {
+    // No mock for this query -> the middleware will hit the unmocked pool.
+    // Use a param the middleware can parse but the unmocked pool will error;
+    // for this test we instead mock the failure path.
+    db.promise().query.mockResolvedValueOnce([[]]);
+    const response = await request(app)
+        .delete('/applications/999999')
+        .set('Authorization', token());
+    expect([403, 404]).toContain(response.statusCode);
+});

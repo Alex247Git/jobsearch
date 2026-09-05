@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
+const authorizeOwner = require('../middleware/authorizeOwner');
+const { logEvent } = require('../audit/auditLog');
 
 // POST new application
 router.post('/', authenticateToken, (req, res) => {
@@ -273,29 +275,25 @@ router.put("/application/:application_id", authenticateToken, requireRole("emplo
 });
 
 // DELETE application by application_id
-router.delete('/:application_id', authenticateToken, async (req, res) => {
-    const applicationId = req.params.application_id;
-
-    try {
-        const [existing] = await db.promise().query('SELECT user_id FROM applications WHERE application_id = ?', [applicationId]);
-        if (existing.length === 0) {
-            return res.status(404).json({ error: 'Application not found' });
+router.delete('/:application_id',
+    authenticateToken,
+    authorizeOwner('application_id', 'applications', 'user_id'),
+    async (req, res) => {
+        try {
+            const [result] = await db.promise().query(
+                'DELETE FROM applications WHERE application_id = ?',
+                [req.params.application_id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Application not found' });
+            }
+            logEvent('application_delete', req, { application_id: req.params.application_id });
+            res.status(200).json({ message: 'Application deleted successfully' });
+        } catch (err) {
+            console.error('Error deleting application:', err.message);
+            res.status(500).json({ error: 'An error occurred while deleting the application' });
         }
-        if (String(existing[0].user_id) !== String(req.user.user_id)) {
-            return res.status(403).json({ error: 'Forbidden: you can only modify your own applications' });
-        }
-        const query = 'DELETE FROM applications WHERE application_id = ?';
-        const [result] = await db.promise().query(query, [applicationId]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Application not found' });
-        }
-
-        res.status(200).json({ message: 'Application deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting application:', err.message);
-        res.status(500).json({ error: 'An error occurred while deleting the application' });
     }
-});
+);
 
 module.exports = router;

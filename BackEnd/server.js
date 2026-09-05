@@ -31,6 +31,7 @@ const initializeSocket = require('./socket');
 
 
 const app = express();
+const { auditMiddleware } = require('./audit/auditLog');
 
 app.use(helmet());
 
@@ -55,6 +56,7 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initializeSocket(server, db);
 
+app.use(auditMiddleware);
 app.use('/users', userRoutes);
 app.use('/candidates', candidatesRouter);
 app.use('/companies', companiesRouter);
