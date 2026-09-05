@@ -5,6 +5,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { hashPassword, comparePassword } = require('../authUtils');
 const { authenticateToken, authorizeSelf } = require('../middleware/auth');
+const { logEvent } = require('../audit/auditLog');
 
 
 const router = express.Router();
@@ -56,12 +57,14 @@ router.post('/login', async (req, res) => {
         const query = `SELECT * FROM users WHERE email = ?`;
         const [rows] = await db.promise().query(query, [email]);
         if (rows.length === 0) {
+            logEvent('login_fail', req, { reason: 'no_such_email', email });
             return res.status(401).json({ error: 'Invalid email or password' });
         }
         const user = rows[0];
         let isMatch = false;
         isMatch = await comparePassword(password, user.password);
         if (!isMatch) {
+            logEvent('login_fail', req, { reason: 'bad_password', user_id: user.user_id });
             return res.status(401).json({ error: 'Invalid email or password' });
         }
         const token = jwt.sign(
@@ -69,6 +72,7 @@ router.post('/login', async (req, res) => {
             JWT_SECRET,
             { expiresIn: '24h' }
         );
+        logEvent('login_success', req, { user_id: user.user_id, role: user.role });
         res.status(200).json({
             message: 'Login successful',
             token,
