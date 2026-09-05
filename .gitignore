@@ -146,6 +146,8 @@ tempCodeRunnerFile.js
 *.tmp
 *.temp
 
+BackEnd/audit/
+
 # Database files (if any local SQLite files)
 *.db
 *.sqlite
