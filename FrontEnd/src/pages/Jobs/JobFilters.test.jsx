@@ -1,15 +1,16 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import JobFilters from './JobFilters';
 
 const defaultProps = {
     searchQuery: '',
-    onSearchChange: jest.fn(),
+    onSearchChange: vi.fn(),
     salaryRange: [0, 1000000],
-    onSalaryChange: jest.fn(),
+    onSalaryChange: vi.fn(),
     selectedCategories: [],
-    onCategoryChange: jest.fn(),
+    onCategoryChange: vi.fn(),
     jobType: '',
-    onJobTypeChange: jest.fn(),
+    onJobTypeChange: vi.fn(),
 };
 
 test('renders the filter sections', () => {
