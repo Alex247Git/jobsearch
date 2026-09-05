@@ -4,7 +4,7 @@ const db = require('../db');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { hashPassword, comparePassword } = require('../authUtils');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 
 const router = express.Router();
@@ -39,9 +39,8 @@ router.post('/', async (req, res) => {
             is_verified,
             role,
         ]);
-        res.status(201).json({ message: 'User created successfully', user_id: result.insertId });
-        const checkQuery = `SELECT password FROM users WHERE email = ?`;
-        const [checkResult] = await db.promise().query(checkQuery, [email]);
+        const token = jwt.sign({ user_id: result.insertId, role }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        res.status(201).json({ message: 'User created successfully', user_id: result.insertId, token });
     } catch (err) {
         console.error('Error creating user:', err.message);
         res.status(500).json({ error: 'An error occurred while creating the user' });
@@ -114,7 +113,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: `User with ID ${userId} not found` });
         }
 
-        res.status(200).json(results[0]);
+        const { password, ...safeUser } = results[0];
+        res.status(200).json(safeUser);
     } catch (err) {
         console.error(`Database query failed for user ID ${userId}:`, err);
         res.status(500).json({ error: 'Failed to fetch user. Please try again later.' });
@@ -122,7 +122,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // **UPDATE USER**
-router.put('/:user_id', authenticateToken, async (req, res) => {
+router.put('/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
     let { first_name, last_name, email, password, date_of_birth, phone_number, is_verified, role } = req.body;
 
@@ -163,14 +163,6 @@ router.put('/:user_id', authenticateToken, async (req, res) => {
         fieldsToUpdate.push('phone_number = ?');
         values.push(phone_number);
     }
-    if (is_verified !== undefined) {
-        fieldsToUpdate.push('is_verified = ?');
-        values.push(is_verified);
-    }
-    if (role !== undefined) {
-        fieldsToUpdate.push('role = ?');
-        values.push(role);
-    }
 
     if (fieldsToUpdate.length === 0) {
         return res.status(400).json({ error: 'No fields provided for update' });
@@ -194,7 +186,7 @@ router.put('/:user_id', authenticateToken, async (req, res) => {
 });
 
 // **DELETE USER**
-router.delete('/:user_id', authenticateToken, async (req, res) => {
+router.delete('/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
 
     if (!user_id) {

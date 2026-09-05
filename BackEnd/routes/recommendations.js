@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
-router.get("/jobs/:candidate_id", authenticateToken, async (req, res) => {
+router.get("/jobs/:candidate_id", authenticateToken, authorizeSelf("candidate_id"), async (req, res) => {
     const candidate_id = parseInt(req.params.candidate_id);
     const limit = parseInt(req.query.limit) || 10;
     const offset = parseInt(req.query.offset) || 0;
@@ -42,7 +42,7 @@ router.get("/jobs/:candidate_id", authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/candidates/:userId', authenticateToken, (req, res) => {
+router.get('/candidates/:userId', authenticateToken, authorizeSelf('userId'), (req, res) => {
     const userId = parseInt(req.params.userId);
     const jobId = req.query.job_id ? parseInt(req.query.job_id) : null;
     const limit = parseInt(req.query.limit) || 10;

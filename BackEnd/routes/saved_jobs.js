@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST new saved job
 router.post('/', authenticateToken, (req, res) => {
-    const { user_id, job_id, role } = req.body;
+    const { job_id } = req.body;
+    const user_id = req.user.user_id; // server-authoritative
+    const role = req.user.role;
     const saved_date = new Date();
 
 
@@ -52,7 +54,7 @@ router.post('/', authenticateToken, (req, res) => {
 
 
 // GET all saved jobs
-router.get('/:user_id', authenticateToken, (req, res) => {
+router.get('/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
     const { user_id } = req.params;
 
     const query = `SELECT 
@@ -79,7 +81,7 @@ WHERE saved_jobs.user_id = ?`;
 });
 
 // GET saved job by user_id and job_id
-router.get('/:user_id/:job_id', authenticateToken, async (req, res) => {
+router.get('/:user_id/:job_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id, job_id } = req.params;
 
     try {
@@ -98,7 +100,7 @@ router.get('/:user_id/:job_id', authenticateToken, async (req, res) => {
 });
 
 // DELETE saved job by user_id and job_id
-router.delete('/:user_id/:job_id', authenticateToken, async (req, res) => {
+router.delete('/:user_id/:job_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id, job_id } = req.params;
 
     try {

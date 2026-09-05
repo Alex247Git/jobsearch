@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
 
 // POST new application
 router.post('/', authenticateToken, (req, res) => {
-    const { user_id, job_id, status, applied_at } = req.body;
+    const { job_id, status, applied_at } = req.body;
+    const user_id = req.user.user_id; // server-authoritative
 
     db.query(
         'SELECT * FROM applications WHERE user_id = ? AND job_id = ?',
@@ -52,7 +53,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET applications by candidate user_id
-router.get('/candidate/:user_id', authenticateToken, (req, res) => {
+router.get('/candidate/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -105,7 +106,7 @@ router.get('/candidate/:user_id', authenticateToken, (req, res) => {
 
 
 // GET application by user_id
-router.get('/employer/:user_id', authenticateToken, (req, res) => {
+router.get('/employer/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -208,7 +209,7 @@ router.put('/:application_id', authenticateToken, async (req, res) => {
 });
 
 // PUT /application/:application_id - Accept applicant and create employment
-router.put("/application/:application_id", authenticateToken, async (req, res) => {
+router.put("/application/:application_id", authenticateToken, requireRole("employer"), async (req, res) => {
     const { application_id } = req.params;
 
     try {
@@ -276,6 +277,13 @@ router.delete('/:application_id', authenticateToken, async (req, res) => {
     const applicationId = req.params.application_id;
 
     try {
+        const [existing] = await db.promise().query('SELECT user_id FROM applications WHERE application_id = ?', [applicationId]);
+        if (existing.length === 0) {
+            return res.status(404).json({ error: 'Application not found' });
+        }
+        if (String(existing[0].user_id) !== String(req.user.user_id)) {
+            return res.status(403).json({ error: 'Forbidden: you can only modify your own applications' });
+        }
         const query = 'DELETE FROM applications WHERE application_id = ?';
         const [result] = await db.promise().query(query, [applicationId]);
 

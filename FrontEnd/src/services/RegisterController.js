@@ -21,7 +21,12 @@ export const registerUser = async (userData, step) => {
             });
 
             if (!userRes.ok) throw new Error('Failed to register user');
-            const { user_id } = await userRes.json();
+            const { user_id, token } = await userRes.json();
+            if (token) {
+                // Steps 2-4 POST authenticated resources; the apiFetch
+                // helper reads the token from localStorage
+                localStorage.setItem('token', token);
+            }
             return { user_id };
         }
 

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST new message
 router.post('/', authenticateToken, async (req, res) => {
-    const { sender_id, receiver_id, message } = req.body;
+    const { receiver_id, message } = req.body;
+    const sender_id = req.user.user_id; // server-authoritative
 
     if (!sender_id || !receiver_id || !message) {
         return res.status(400).json({ error: 'Please provide all required fields' });
@@ -44,7 +45,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // GET all conversations for a user
-router.get("/conversations/:user_id", authenticateToken, async (req, res) => {
+router.get("/conversations/:user_id", authenticateToken, authorizeSelf("user_id"), async (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -70,6 +71,9 @@ router.get("/conversations/:user_id", authenticateToken, async (req, res) => {
 
 // GET messages between two users
 router.get('/:sender_id/:receiver_id', authenticateToken, async (req, res) => {
+    if (![req.params.sender_id, req.params.receiver_id].map(String).includes(String(req.user.user_id))) {
+        return res.status(403).json({ error: 'Forbidden: not a participant of this conversation' });
+    }
     const { sender_id, receiver_id } = req.params;
 
     const query = `

@@ -1,6 +1,15 @@
 const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
+
+// Fail fast: without a JWT secret every authenticated route would 500
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set');
+    process.exit(1);
+}
+
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const userRoutes = require('./routes/users');
 const db = require('./db');
@@ -22,6 +31,18 @@ const initializeSocket = require('./socket');
 
 
 const app = express();
+
+app.use(helmet());
+
+// Brute-force protection for the login endpoint
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts, please try again later' },
+});
+app.use('/users/login', loginLimiter);
 
 app.use(express.json());
 app.use(cors({
