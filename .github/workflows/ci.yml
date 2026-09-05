@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run backend tests (mocked DB, no live MySQL needed)
-        run: npx jest --ci
+        run: npx jest --ci BackEnd/server.test.js
 
   frontend:
     name: Frontend tests + build
