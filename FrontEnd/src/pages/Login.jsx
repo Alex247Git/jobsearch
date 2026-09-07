@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { apiFetch } from '../api';
 import {
     Box,
@@ -17,11 +18,12 @@ function Login() {
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
+    const notify = useNotification();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData({ ...formData, name: value });
         if (errorMessage) setErrorMessage('');
     };
 
@@ -44,6 +46,7 @@ function Login() {
                     token: data.token,
                 };
                 login(userData);
+                notify.success('Welcome back! Login successful.');
                 navigate('/Home');
             } else {
                 setErrorMessage(data.error || 'Login failed.');

@@ -24,6 +24,7 @@ import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { apiFetch } from '../../api';
+import { useNotification } from '../../context/NotificationContext';
 import JobFilters from './JobFilters';
 import JobCard from './JobCard';
 import MessageDialog from './MessageDialog';
@@ -32,6 +33,7 @@ function Jobs({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const notify = useNotification();
 
     const [jobs, setJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
@@ -109,23 +111,14 @@ function Jobs({ user }) {
     }, []);
 
     const handleApplication = (jobId) => {
-        console.log('📨 Submitting application with:', {
-            user_id: user.user_id,
-            job_id: jobId,
-            status: 'pending',
-            applied_at: new Date().toISOString(),
-        });
-
         if (!user?.user_id) {
-            alert('You need to log in to apply for jobs.');
+            notify.warning('Please log in to apply for jobs.');
             return;
         }
-
         if (appliedJobs.includes(jobId)) {
-            alert('You have already applied for this job.');
+            notify.info('You have already applied for this job.');
             return;
         }
-
         apiFetch(`/applications`, {
             method: 'POST',
             headers: {
@@ -139,32 +132,27 @@ function Jobs({ user }) {
         })
             .then(async response => {
                 const data = await response.json();
-                console.log('📬 Response from server:', data);
-
                 if (!response.ok) {
                     throw new Error(data.error || "Failed to apply for job.");
                 }
-
-                alert('Application submitted successfully!');
+                notify.success('Application submitted successfully!');
                 setAppliedJobs(prev => [...prev, jobId]);
             })
             .catch(error => {
                 console.error('❌ Error applying for job:', error);
-                alert(error.message);
+                notify.error(error.message || 'Failed to submit application.');
             });
     };
 
     const handleSaveJob = (jobId) => {
         if (!user || !user.user_id) {
-            alert('You need to be logged in to save jobs.');
+            notify.warning('Please log in to save jobs.');
             return;
         }
-
         if (savedJobs.includes(jobId)) {
-            alert('This job is already saved.');
+            notify.info('This job is already saved.');
             return;
         }
-
         apiFetch(`/saved_jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -176,11 +164,12 @@ function Jobs({ user }) {
         })
             .then(response => response.json())
             .then(() => {
-                alert('Job saved successfully!');
+                notify.success('Job saved successfully!');
                 setSavedJobs([...savedJobs, jobId]);
             })
             .catch(error => {
                 console.error('Error saving job:', error);
+                notify.error('Failed to save job. Please try again.');
             });
     };
 
@@ -211,7 +200,7 @@ function Jobs({ user }) {
 
     const handleSendMessage = () => {
         if (!user?.user_id || !selectedEmployer || !messageText.trim()) {
-            alert('Please enter a message before sending.');
+            notify.warning('Please enter a message before sending.');
             return;
         }
 
@@ -230,13 +219,16 @@ function Jobs({ user }) {
             .then((newMessage) => {
                 if (newMessage.error) {
                     console.error("Message sending error:", newMessage.error);
+                    notify.error('Failed to send message.');
                     return;
                 }
                 setChatHistory([...chatHistory, newMessage]);
                 setMessageText("");
+                notify.success('Message sent successfully!');
             })
             .catch(error => {
                 console.error('Error sending message:', error);
+                notify.error('Failed to send message. Please try again.');
             });
     };
 

@@ -9,6 +9,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { apiFetch } from '../api';
+import { useNotification } from '../context/NotificationContext';
 
 const FIELDS = [
     { key: 'location', label: 'Location', icon: <LocationOnIcon fontSize="small" /> },
@@ -34,6 +35,7 @@ function Profile({ user }) {
     const [error, setError] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
+    const notify = useNotification();
 
     useEffect(() => {
         if (!viewedUserId) { setError('No user ID found.'); setLoading(false); return; }
@@ -67,7 +69,11 @@ function Profile({ user }) {
             if (!r.ok) throw new Error();
             setProfile({ ...(profile || { user_id: viewedUserId }), ...formData });
             setIsEditing(false);
-        } catch { setError('Failed to update profile.'); }
+            notify.success('Profile updated successfully!');
+        } catch { 
+            setError('Failed to update profile.');
+            notify.error('Failed to update profile. Please try again.');
+        }
     };
 
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;

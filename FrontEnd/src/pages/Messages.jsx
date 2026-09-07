@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { apiFetch } from '../api';
+import { useNotification } from '../context/NotificationContext';
 
 function Messages({ user }) {
     const [conversations, setConversations] = useState([]);
@@ -12,6 +13,7 @@ function Messages({ user }) {
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState('');
     const messagesEndRef = useRef(null);
+    const notify = useNotification();
 
     // Normalize to string once - JWT payload comes as number from API,
     // but the same id can come back as either type from different paths
@@ -83,7 +85,12 @@ function Messages({ user }) {
             setMessages(p => [...p, newMessage]);
             setMessage('');
             socket.emit('sendMessage', newMessage);
+            notify.success('Message sent!');
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+        })
+        .catch(err => {
+            console.error('Error sending message:', err);
+            notify.error('Failed to send message. Please try again.');
         });
     };
 

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { AuthContext, AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -95,7 +96,9 @@ function App() {
     return (
         <ThemeProvider theme={theme}>
             <AuthProvider>
-                <InnerApp />
+                <NotificationProvider>
+                    <InnerApp />
+                </NotificationProvider>
             </AuthProvider>
         </ThemeProvider>
     );
