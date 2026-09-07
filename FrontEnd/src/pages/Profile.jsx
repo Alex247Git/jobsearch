@@ -1,12 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import "./Profile.css";
+import React, { useState, useEffect } from 'react';
+import { useParams, Link as RouterLink } from 'react-router-dom';
+import {
+    Container, Paper, Stack, Box, Typography, TextField, Button, Link as MuiLink,
+    Alert, CircularProgress, Divider,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { apiFetch } from '../api';
+
+const FIELDS = [
+    { key: 'location', label: 'Location', icon: <LocationOnIcon fontSize="small" /> },
+    { key: 'phone_number', label: 'Phone', kind: 'user' },
+    { key: 'date_of_birth', label: 'Date of Birth', type: 'date', kind: 'user' },
+    { key: 'bio', label: 'Bio', multiline: true },
+    { key: 'skills', label: 'Skills' },
+    { key: 'experience', label: 'Experience' },
+    { key: 'education', label: 'Education' },
+    { key: 'certifications', label: 'Certifications' },
+    { key: 'languages', label: 'Languages' },
+    { key: 'cv', label: 'CV', kind: 'link' },
+    { key: 'website', label: 'Website', kind: 'link' },
+    { key: 'social_links', label: 'Social Links', kind: 'link' },
+];
 
 function Profile({ user }) {
     const { userId: paramUserId } = useParams();
     const viewedUserId = paramUserId || user?.user_id;
-
     const [profile, setProfile] = useState(null);
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -15,124 +36,104 @@ function Profile({ user }) {
     const [formData, setFormData] = useState({});
 
     useEffect(() => {
-        if (!viewedUserId) {
-            setError("No user ID found.");
-            setLoading(false);
-            return;
-        }
-
-        const fetchUserData = async () => {
+        if (!viewedUserId) { setError('No user ID found.'); setLoading(false); return; }
+        const fetchUser = async () => {
             try {
-                const userRes = await apiFetch(`/users/${viewedUserId}`, {
-                    headers: { Authorization: `Bearer ${user.token}` },
-                });
-                if (!userRes.ok) throw new Error("Failed to fetch user data");
-                const userJson = await userRes.json();
-                setUserData(userJson);
-            } catch (err) {
-                setError("Failed to load user data.");
-            }
+                const r = await apiFetch(`/users/${viewedUserId}`, { headers: { Authorization: `Bearer ${user.token}` } });
+                if (!r.ok) throw new Error();
+                setUserData(await r.json());
+            } catch { setError('Failed to load user data.'); }
         };
-
-        const fetchProfileData = async () => {
+        const fetchProfile = async () => {
             try {
-                const profileRes = await apiFetch(`/profiles/${viewedUserId}`);
-                if (profileRes.status === 404) {
-                    // No profile yet — show an empty editable form instead of an error
-                    setProfile(null);
-                    setFormData({});
-                    return;
-                }
-                if (!profileRes.ok) throw new Error("Failed to fetch profile");
-                const profileJson = await profileRes.json();
-                setProfile(profileJson);
-                setFormData(profileJson);
-            } catch (err) {
-                setError("Failed to load profile.");
-            } finally {
-                setLoading(false);
-            }
+                const r = await apiFetch(`/profiles/${viewedUserId}`);
+                if (r.status === 404) { setProfile(null); setFormData({}); return; }
+                if (!r.ok) throw new Error();
+                const d = await r.json();
+                setProfile(d); setFormData(d);
+            } catch { setError('Failed to load profile.'); }
+            finally { setLoading(false); }
         };
-
-        fetchUserData();
-        fetchProfileData();
-    }, [viewedUserId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+        fetchUser(); fetchProfile();
+    }, [viewedUserId]);
 
     const handleSave = async () => {
         try {
-            const response = await apiFetch(profile ? `/profiles/${viewedUserId}` : "/profiles", {
-                method: profile ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${user.token}`
-                },
-                body: JSON.stringify(formData)
+            const r = await apiFetch(profile ? `/profiles/${viewedUserId}` : '/profiles', {
+                method: profile ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+                body: JSON.stringify(formData),
             });
-            if (!response.ok) throw new Error("Failed to update profile");
+            if (!r.ok) throw new Error();
             setProfile({ ...(profile || { user_id: viewedUserId }), ...formData });
             setIsEditing(false);
-        } catch (err) {
-            setError("Failed to update profile.");
-        }
+        } catch { setError('Failed to update profile.'); }
     };
 
-    if (loading) return <p className="loading-text">Loading profile...</p>;
-    if (error) return <p className="error-text">{error}</p>;
-    if (!userData) return <p className="error-text">No user data found</p>;
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    if (error) return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
+    if (!userData) return <Container sx={{ mt: 4 }}><Alert severity="info">No user data found</Alert></Container>;
 
     const isOwner = user && String(user.user_id) === String(profile?.user_id ?? viewedUserId);
+    const getValue = (field) => (field.kind === 'user' ? userData[field.key] : formData[field.key]);
+    const setValue = (field, v) => field.kind === 'user' ? setUserData({ ...userData, [field.key]: v }) : setFormData({ ...formData, [field.key]: v });
 
     return (
-        <div className="profile-container">
-            <div className="profile-header">
-                <h1>{userData.first_name} {userData.last_name}</h1>
-                <p className="profile-location">
-                    📍 {isEditing ?
-                        <input name="location" value={formData.location || ""} onChange={handleInputChange} /> :
-                        profile.location || "Location not set"}
-                </p>
-            </div>
-            <div className="profile-info">
-                <p><strong>Email:</strong> {userData.email}</p>
-                <p><strong>Phone:</strong> {isEditing ? <input name="phone_number" value={userData.phone_number || ""} onChange={handleInputChange} /> : userData.phone_number || "Not provided"}</p>
-                <p><strong>Date of Birth:</strong> {isEditing ? <input type="date" name="date_of_birth" value={userData.date_of_birth || ""} onChange={handleInputChange} /> : userData.date_of_birth || "Not specified"}</p>
-                <p><strong>Bio:</strong> {isEditing ? <textarea name="bio" value={formData.bio || ""} onChange={handleInputChange} /> : formData.bio || "Not specified"}</p>
-                <p><strong>Skills:</strong> {isEditing ? <input name="skills" value={formData.skills || ""} onChange={handleInputChange} /> : formData.skills || "Not specified"}</p>
-                <p><strong>Experience:</strong> {isEditing ? <input name="experience" value={formData.experience || ""} onChange={handleInputChange} /> : formData.experience || "Not specified"}</p>
-                <p><strong>Education:</strong> {isEditing ? <input name="education" value={formData.education || ""} onChange={handleInputChange} /> : formData.education || "Not specified"}</p>
-                <p><strong>Certifications:</strong> {isEditing ? <input name="certifications" value={formData.certifications || ""} onChange={handleInputChange} /> : formData.certifications || "Not specified"}</p>
-                <p><strong>Languages:</strong> {isEditing ? <input name="languages" value={formData.languages || ""} onChange={handleInputChange} /> : formData.languages || "Not specified"}</p>
-                <p><strong>CV:</strong> {isEditing ?
-                    <input name="cv" value={formData.cv || ""} onChange={handleInputChange} /> :
-                    (formData.cv ? <a href={formData.cv} target="_blank" rel="noopener noreferrer">{formData.cv}</a> : "Not provided")}
-                </p>
-                <p><strong>Website:</strong> {isEditing ?
-                    <input name="website" value={formData.website || ""} onChange={handleInputChange} /> :
-                    (formData.website ? <a href={formData.website} target="_blank" rel="noopener noreferrer">{formData.website}</a> : "Not provided")}
-                </p>
-                <p><strong>Social Links:</strong> {isEditing ?
-                    <input name="social_links" value={formData.social_links || ""} onChange={handleInputChange} /> :
-                    (formData.social_links ? <a href={formData.social_links} target="_blank" rel="noopener noreferrer">{formData.social_links}</a> : "Not provided")}
-                </p>
-            </div>
-            {isOwner && (
-                <div className="profile-actions">
-                    {isEditing ? (
-                        <>
-                            <button onClick={handleSave} className="save-btn">Save</button>
-                            <button onClick={() => { setIsEditing(false); setFormData(profile); }} className="cancel-btn">Cancel</button>
-                        </>
-                    ) : (
-                        <button onClick={() => setIsEditing(true)} className="edit-btn">Edit Profile</button>
-                    )}
-                </div>
-            )}
-        </div>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Paper sx={{ p: 4, borderRadius: 3 }} elevation={1}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                    <Box>
+                        <Typography variant="h4" sx={{ color: 'text.primary' }}>
+                            {userData.first_name} {userData.last_name}
+                        </Typography>
+                        {isEditing ? (
+                            <TextField size="small" name="location" value={formData.location || ''}
+                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                placeholder="Location" sx={{ mt: 1 }} />
+                        ) : (
+                            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                                <LocationOnIcon fontSize="small" /> <Typography>{(profile && profile.location) || 'Location not set'}</Typography>
+                            </Stack>
+                        )}
+                    </Box>
+                </Stack>
+                <Divider sx={{ mb: 3 }} />
+                <Stack spacing={2}>
+                    {FIELDS.filter(f => f.key !== 'location').map(field => {
+                        const val = getValue(field);
+                        if (isEditing) {
+                            return (
+                                <TextField key={field.key} label={field.label} value={val || ''} type={field.type || 'text'}
+                                    multiline={field.multiline} fullWidth size="small"
+                                    onChange={(e) => setValue(field, e.target.value)} />
+                            );
+                        }
+                        return (
+                            <Stack key={field.key} direction="row" spacing={1}>
+                                <Typography sx={{ minWidth: 140, color: 'text.primary' }}><strong>{field.label}:</strong></Typography>
+                                <Typography sx={{ flex: 1, color: 'text.secondary' }}>
+                                    {val ? (field.kind === 'link'
+                                        ? <MuiLink href={val} target="_blank" rel="noopener noreferrer">{val}</MuiLink>
+                                        : val) : 'Not specified'}
+                                </Typography>
+                            </Stack>
+                        );
+                    })}
+                </Stack>
+                {isOwner && (
+                    <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 4 }}>
+                        {isEditing ? (
+                            <>
+                                <Button variant="outlined" startIcon={<CancelIcon />} onClick={() => { setIsEditing(false); setFormData(profile || {}); }}>Cancel</Button>
+                                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave}>Save</Button>
+                            </>
+                        ) : (
+                            <Button variant="contained" startIcon={<EditIcon />} onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                        )}
+                    </Stack>
+                )}
+            </Paper>
+        </Container>
     );
 }
 
