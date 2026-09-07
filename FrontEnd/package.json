@@ -28,7 +28,8 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "vite"
   },
   "overrides": {
     "react-router": "6.30.3-pre-v6.0",
