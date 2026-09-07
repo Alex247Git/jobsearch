@@ -137,10 +137,6 @@ button:hover {
     margin-bottom: 10px;
 }
 
-.recommended-section {
-    margin-bottom: 30px;
-}
-
 .candidate-card.recommended {
     border: 2px solid gold;
     background: #fffbea;
@@ -177,29 +173,6 @@ button:hover {
     font-size: 14px;
     font-weight: bold;
     z-index: 1;
-}
-
-.recommendation-score {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 8px 0;
-    background: #fff3cd;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ffeeba;
-}
-
-.recommendation-score strong {
-    color: black;
-}
-
-.score-value {
-    font-weight: bold;
-    color: #000;
-    background: #16A34A;
-    padding: 4px 8px;
-    border-radius: 5px;
 }
 
 .recommended-slider {
