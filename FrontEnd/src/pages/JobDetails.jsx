@@ -1,6 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import "./JobDetails.css";
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+    Container, Paper, Stack, Typography, Button, Box, Divider, Dialog, DialogTitle,
+    DialogContent, DialogActions, TextField, IconButton, Alert, CircularProgress,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import WorkIcon from '@mui/icons-material/Work';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import { apiFetch } from '../api';
 
 function JobDetails({ user }) {
@@ -9,213 +18,121 @@ function JobDetails({ user }) {
     const [job, setJob] = useState(null);
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
-    const [selectedEmployer, setSelectedEmployer] = useState(null);
-    const [messageText, setMessageText] = useState("");
+    const [messageText, setMessageText] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
     useEffect(() => {
-        apiFetch(`/jobs/${jobId}`)
-            .then(response => response.json())
-            .then(data => setJob(data))
-            .catch(error => console.error("Error fetching job details:", error));
+        apiFetch(`/jobs/${jobId}`).then(r => r.json()).then(setJob).catch(console.error);
     }, [jobId]);
 
     useEffect(() => {
-        if (user?.user_id) {
-            apiFetch(`/applications/candidate/${user.user_id}`)
-                .then(response => response.json())
-                .then(data => setAppliedJobs(data.map(application => application.job_id)))
-                .catch(error => console.error('Error fetching applied jobs:', error));
-
-            apiFetch(`/saved_jobs/${user.user_id}`)
-                .then(response => response.json())
-                .then(data => setSavedJobs(data.map(job => job.job_id)))
-                .catch(error => console.error('Error fetching saved jobs:', error));
-        }
-    }, [user]);
+        if (!user?.user_id) return;
+        apiFetch(`/applications/candidate/${user.user_id}`).then(r => r.json())
+            .then(d => setAppliedJobs(d.map(a => a.job_id))).catch(console.error);
+        apiFetch(`/saved_jobs/${user.user_id}`).then(r => r.json())
+            .then(d => setSavedJobs(d.map(s => s.job_id))).catch(console.error);
+    }, [user?.user_id]);
 
     const handleApplication = () => {
-        if (!user?.user_id) {
-            alert('You need to log in to apply for jobs.');
-            return;
-        }
-
-        if (appliedJobs.includes(job.job_id)) {
-            alert('You have already applied for this job.');
-            return;
-        }
-
-        apiFetch(`/applications`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: user.user_id,
-                job_id: job.job_id,
-                status: 'pending',
-                applied_at: new Date().toISOString(),
-            }),
-        })
-            .then(response => response.json())
-            .then(() => {
-                alert('Application submitted successfully!');
-                setAppliedJobs(prev => [...prev, job.job_id]);
-            })
-            .catch(error => console.error('Error applying for job:', error));
+        if (!user?.user_id) return alert('Log in to apply.');
+        if (appliedJobs.includes(job.job_id)) return;
+        apiFetch('/applications', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.user_id, job_id: job.job_id, status: 'pending' }) })
+            .then(r => r.json()).then(() => setAppliedJobs(p => [...p, job.job_id]));
     };
 
     const handleSaveJob = () => {
-        if (!user?.user_id) {
-            alert('You need to log in to save jobs.');
-            return;
-        }
-
-        if (savedJobs.includes(job.job_id)) {
-            alert('This job is already saved.');
-            return;
-        }
-
-        apiFetch(`/saved_jobs`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: user.user_id,
-                job_id: job.job_id,
-                role: user.role
-            }),
-        })
-            .then(response => response.json())
-            .then(() => {
-                alert('Job saved successfully!');
-                setSavedJobs(prev => [...prev, job.job_id]);
-            })
-            .catch(error => console.error('Error saving job:', error));
+        if (!user?.user_id) return alert('Log in to save.');
+        if (savedJobs.includes(job.job_id)) return;
+        apiFetch('/saved_jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.user_id, job_id: job.job_id, role: user.role }) })
+            .then(r => r.json()).then(() => setSavedJobs(p => [...p, job.job_id]));
     };
 
     const fetchChatHistory = (senderId, receiverId) => {
-        apiFetch(`/messages/${senderId}/${receiverId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error("Error fetching chat history:", data.error);
-                    return;
-                }
-                setChatHistory(data);
-            })
-            .catch(error => {
-                console.error('Error fetching chat history:', error);
-            });
+        apiFetch(`/messages/${senderId}/${receiverId}`).then(r => r.json()).then(setChatHistory).catch(console.error);
     };
 
     const handleSendMessage = () => {
-        if (!user?.user_id || !selectedEmployer || !messageText.trim()) {
-            alert('Please enter a message before sending.');
-            return;
-        }
-
-        const messageData = {
-            sender_id: user.user_id,
-            receiver_id: selectedEmployer.employer_id,
-            message: messageText.trim(),
-        };
-
-        apiFetch(`/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(messageData),
-        })
-            .then(response => response.json())
-            .then((newMessage) => {
-                if (newMessage.error) {
-                    console.error("Message sending error:", newMessage.error);
-                    return;
-                }
-                setChatHistory([...chatHistory, newMessage]);
-                setMessageText("");
-            })
-            .catch(error => {
-                console.error('Error sending message:', error);
+        if (!user?.user_id || !messageText.trim() || !job) return;
+        apiFetch('/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender_id: user.user_id, receiver_id: job.employer_id, message: messageText.trim() }) })
+            .then(r => r.json()).then(d => {
+                if (d.message_id) { setChatHistory(p => [...p, d]); setMessageText(''); }
             });
     };
 
-    if (!job) return <p>Loading job details...</p>;
+    if (!job) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    const isApplied = appliedJobs.includes(job.job_id);
+    const isSaved = savedJobs.includes(job.job_id);
 
     return (
-        <div className="job-details-container">
-            <h1>{job.title}</h1>
-            <p><strong>Company:</strong> {job.company_name}</p>
-            <p><strong>Location:</strong> {job.location}</p>
-            <p><strong>Type:</strong> {job.job_type}</p>
-            <p><strong>Remote Option:</strong> {job.remote_option}</p>
-            <p><strong>Salary:</strong> ${job.salary.toLocaleString()}</p>
-            <p><strong>Description:</strong> {job.description}</p>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Paper sx={{ p: 4, borderRadius: 3 }} elevation={1}>
+                <Typography variant="h4" sx={{ mb: 1 }}>{job.title}</Typography>
+                <Typography color="text.secondary" sx={{ mb: 3 }}>{job.company_name}</Typography>
+                <Stack direction="row" spacing={3} sx={{ mb: 3 }} flexWrap="wrap">
+                    <Stack direction="row" spacing={0.5} alignItems="center"><LocationOnIcon fontSize="small" color="action" /><Typography>{job.location}</Typography></Stack>
+                    <Stack direction="row" spacing={0.5} alignItems="center"><WorkIcon fontSize="small" color="action" /><Typography>{job.job_type}</Typography></Stack>
+                    <Stack direction="row" spacing={0.5} alignItems="center"><HomeWorkIcon fontSize="small" color="action" /><Typography>{job.remote_option ? 'Remote' : 'On-site'}</Typography></Stack>
+                    <Stack direction="row" spacing={0.5} alignItems="center"><AttachMoneyIcon fontSize="small" color="action" /><Typography>${job.salary?.toLocaleString()}</Typography></Stack>
+                </Stack>
+                <Divider sx={{ my: 2 }} />
+                <Typography sx={{ mb: 3 }}>{job.description}</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                    <Button variant="contained" color={isApplied ? 'success' : 'primary'} disabled={isApplied} onClick={handleApplication}>
+                        {isApplied ? 'Applied ✓' : 'Apply Now'}
+                    </Button>
+                    <Button variant="outlined" color={isSaved ? 'success' : 'primary'} disabled={isSaved} onClick={handleSaveJob}>
+                        {isSaved ? 'Saved ✓' : 'Save Job'}
+                    </Button>
+                    <Button variant="outlined" onClick={() => {
+                        setIsMessageModalOpen(true); setMessageText('');
+                        if (user?.user_id) fetchChatHistory(user.user_id, job.employer_id);
+                    }}>Message Employer</Button>
+                    <Button onClick={() => job.employer_id && navigate(`/profile/${job.employer_id}`)}>View Employer</Button>
+                    <Button onClick={() => navigate(`/companies/${job.company_id}`)}>View Company</Button>
+                </Stack>
 
-            <div className="job-buttons">
-                <button
-                    className="apply-btn"
-                    onClick={handleApplication}
-                    disabled={appliedJobs.includes(job.job_id)}
-                >
-                    {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                </button>
-                <button
-                    className="save-btn"
-                    onClick={handleSaveJob}
-                    disabled={savedJobs.includes(job.job_id)}
-                >
-                    {savedJobs.includes(job.job_id) ? 'Saved ❤️' : 'Save'}
-                </button>
-                <button
-                    className="message-btn"
-                    onClick={() => {
-                        setSelectedEmployer(job);
-                        setMessageText("");
-                        setIsMessageModalOpen(true);
-                        if (user?.user_id) {
-                            fetchChatHistory(user.user_id, job.employer_id);
-                        }
-                    }}
-                >
-                    ✉️ Message Employer
-                </button>
-                <button
-                    className="profile-btn"
-                    onClick={() => {
-                        console.log("Full job object:", job);
-                        console.log("Employer ID:", job.employer_id);
-                        if (job.employer_id) {
-                            navigate(`/profile/${job.employer_id}`); 
-                        } else {
-                            console.error("Employer ID is not available.");
-                        }
-                    }}
-                >
-                    View Employer Profile
-                </button>
-                <button
-                    className="company-btn"
-                    onClick={() => navigate(`/companies/${job.company_id}`)}
-                >
-                    View Company
-                </button>
-            </div>
-            {isMessageModalOpen && selectedEmployer && (
-                <div className="message-modal">
-                    <div className="modal-content">
-                        <h3>Message to Employer: <strong>{selectedEmployer.title}</strong></h3>
-                        <textarea
-                            placeholder="Type your message..."
-                            value={messageText}
-                            onChange={(e) => setMessageText(e.target.value)}
-                            rows="5"
-                            style={{ width: '100%' }}
-                        />
-                        <button onClick={handleSendMessage}>Send Message</button>
-                        <button onClick={() => setIsMessageModalOpen(false)}>Close</button>
-                    </div>
-                </div>
-            )}
-        </div>
+                {chatHistory.length > 0 && (
+                    <>
+                        <Divider sx={{ my: 3 }} />
+                        <Typography variant="h6" sx={{ mb: 1 }}>Chat History</Typography>
+                        <Stack spacing={1} sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                            {chatHistory.map((m, i) => (
+                                <Box key={i} sx={{
+                                    alignSelf: m.sender_id === user?.user_id ? 'flex-end' : 'flex-start',
+                                    bgcolor: m.sender_id === user?.user_id ? '#DCFCE7' : 'grey.100',
+                                    px: 2, py: 1, borderRadius: 2, maxWidth: '70%',
+                                }}>
+                                    <Typography variant="body2">{m.message}</Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    </>
+                )}
+            </Paper>
+
+            <Dialog open={isMessageModalOpen} onClose={() => setIsMessageModalOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>
+                    Message to {job.title}
+                    <IconButton onClick={() => setIsMessageModalOpen(false)} sx={{ position: 'absolute', right: 8, top: 8 }}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField fullWidth multiline rows={4} value={messageText} placeholder="Type a message..."
+                        onChange={(e) => setMessageText(e.target.value)} autoFocus />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsMessageModalOpen(false)}>Close</Button>
+                    <Button variant="contained" startIcon={<SendIcon />} onClick={handleSendMessage} disabled={!messageText.trim()}>
+                        Send
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Container>
     );
 }
 

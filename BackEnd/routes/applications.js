@@ -4,10 +4,11 @@ const db = require('../db');
 const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
 const authorizeOwner = require('../middleware/authorizeOwner');
 const { logEvent } = require('../audit/auditLog');
+const asyncHandler = require('../middleware/asyncHandler');
 
 // POST new application
-router.post('/', authenticateToken, async (req, res) => {
-    const { job_id, status, applied_at } = req.body;
+router.post('/', authenticateToken, asyncHandler(async (req, res, next) => {
+    const { job_id, status } = req.body;
     const user_id = req.user.user_id; // server-authoritative
 
     try {
@@ -20,15 +21,17 @@ router.post('/', authenticateToken, async (req, res) => {
         }
 
         await db.promise().query(
-            'INSERT INTO applications (user_id, job_id, status, applied_at) VALUES (?, ?, ?, ?)',
-            [user_id, job_id, status, applied_at]
+            'INSERT INTO applications (user_id, job_id, status) VALUES (?, ?, ?)',
+            [user_id, job_id, status]
         );
         res.status(201).json({ message: 'Application submitted successfully!' });
     } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        // Forward to central error handler so SQL errors (FK violations,
+        // duplicates, missing required fields) get proper HTTP codes
+        // (400/409/500) instead of a generic 500 with no information.
+        return next(err);
     }
-});
+}));
 
 // GET all applications
 router.get('/', authenticateToken, async (req, res) => {
@@ -36,7 +39,7 @@ router.get('/', authenticateToken, async (req, res) => {
         const [results] = await db.promise().query('SELECT * FROM applications');
 
         if (results.length === 0) {
-            return res.status(404).json({ error: 'No applications found' });
+            return res.status(200).json([]);
         }
 
         res.status(200).json(results);
@@ -203,7 +206,7 @@ router.put('/:application_id', authenticateToken, async (req, res) => {
 });
 
 // PUT /application/:application_id - Accept applicant and create employment
-router.put("/application/:application_id", authenticateToken, requireRole("employer"), async (req, res) => {
+router.put("/application/:application_id", authenticateToken, requireRole("employer"), asyncHandler(async (req, res, next) => {
     const { application_id } = req.params;
 
     try {
@@ -260,11 +263,8 @@ router.put("/application/:application_id", authenticateToken, requireRole("emplo
 
 
         res.status(200).json({ message: "Application accepted and candidate employed." });
-    } catch (error) {
-        console.error("❌ Error accepting application and hiring candidate:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
+    } catch (err) { return next(err); }
+}));
 
 // DELETE application by application_id
 router.delete('/:application_id',

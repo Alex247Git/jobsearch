@@ -136,7 +136,7 @@ router.delete('/leavejob/:user_id', authenticateToken, authorizeSelf('user_id'),
 
         await db.promise().execute(
             `UPDATE candidates 
-            SET availability = "Yes",
+            SET availability = "Yes"
             WHERE user_id = ?`,
             [user_id]
         );

@@ -12,7 +12,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
-        const query = `INSERT INTO employers (user_id, company_id, job_id) VALUES (?, ?, ?, ?)`;
+        const query = `INSERT INTO employers (user_id, company_id, job_id) VALUES (?, ?, ?)`;
         const [result] = await db.promise().query(query, [user_id, company_id, job_id]);
         res.status(201).json({ message: 'Employer created successfully', employerId: result.insertId });
     } catch (err) {
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
         const [results] = await db.promise().query('SELECT * FROM employers');
 
         if (results.length === 0) {
-            return res.status(404).json({ error: 'No employers found' });
+            return res.status(200).json([]);
         }
 
         res.status(200).json(results);

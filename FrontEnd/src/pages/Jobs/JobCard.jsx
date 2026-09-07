@@ -13,10 +13,12 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 function JobCard({
     job, saved, applied, rating, renderStars,
     onOpen, onApply, onMessage, onSave,
+    recommended = false,
+    score = null,
 }) {
     const theme = useTheme();
     return (
-<Grid item xs={12} sm={6} md={4} key={`job-${job.job_id}`}>
+<Grid size={{ xs: 12, sm: 6, md: 4 }} key={`job-${job.job_id}`}>
     <Card
         sx={{
             height: '100%',
@@ -24,9 +26,16 @@ function JobCard({
             flexDirection: 'column',
             cursor: 'pointer',
             transition: 'transform 0.2s',
+            border: recommended ? '2px solid #FFD700' : '1px solid',
+            borderColor: recommended ? '#FFD700' : 'divider',
+            boxShadow: recommended ? '0 0 12px rgba(255, 215, 0, 0.3)' : theme.shadows[2],
+            position: 'relative',
+            overflow: 'visible',
             '&:hover': {
                 transform: 'translateY(-4px)',
-                boxShadow: theme.shadows[8],
+                boxShadow: recommended
+                    ? '0 0 20px rgba(255, 215, 0, 0.5)'
+                    : theme.shadows[8],
             },
         }}
         onClick={(e) => {
@@ -35,7 +44,44 @@ function JobCard({
             }
         }}
     >
-        <CardContent sx={{ flexGrow: 1 }}>
+        {recommended && (
+            <Box sx={{
+                position: 'absolute',
+                top: -10,
+                left: 12,
+                bgcolor: '#FFD700',
+                color: '#000',
+                px: 1.5,
+                py: 0.3,
+                borderRadius: 1,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                letterSpacing: 0.5,
+                zIndex: 1,
+                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
+            }}>
+                RECOMMENDED
+            </Box>
+        )}
+        {recommended && score != null && (
+            <Box sx={{
+                position: 'absolute',
+                top: -10,
+                right: 12,
+                bgcolor: 'success.main',
+                color: '#fff',
+                px: 1.5,
+                py: 0.3,
+                borderRadius: 1,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                zIndex: 1,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+            }}>
+                {(score * 10).toFixed(0)}% MATCH
+            </Box>
+        )}
+        <CardContent sx={{ flexGrow: 1, pt: recommended ? 3 : 2 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
                 {job.title}
             </Typography>

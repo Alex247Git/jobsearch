@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
         const [results] = await db.promise().query(query);
 
         if (results.length === 0) {
-            return res.status(404).json({ error: 'No jobs found' });
+            return res.status(200).json([]);
         }
 
         res.status(200).json(results);

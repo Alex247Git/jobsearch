@@ -1,94 +1,85 @@
 import React, { useEffect, useState } from 'react';
-import './Applications.css';
+import { useNavigate } from 'react-router-dom';
+import {
+    Container, Box, Paper, Stack, Typography, Button, Card, CardContent, CardActions,
+    CircularProgress, Alert,
+} from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../api';
+import { EmptyState } from '../components/EmptyState';
 
 function Applications({ user }) {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const user_id = user?.user_id;
 
     useEffect(() => {
-        if (!user || !user_id) {
-            console.error('User ID is undefined. Cannot fetch applications.');
-            setLoading(false);
-            return;
-        }
-
-        fetchApplications();
-    }, [user_id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const fetchApplications = () => {
+        if (!user_id) { setLoading(false); return; }
         apiFetch(`/applications/candidate/${user_id}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch applications');
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setApplications(data);
-                setLoading(false);
-            })
-            .catch((error) => {
-                console.error('Error fetching applications:', error);
-                setLoading(false);
-            });
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(d => { setApplications(d); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, [user_id]);
+
+    const handleDelete = (applicationId) => {
+        if (!window.confirm('Delete this application?')) return;
+        apiFetch(`/applications/${applicationId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } })
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(() => setApplications(a => a.filter(x => x.application_id !== applicationId)))
+            .catch(err => console.error(err));
     };
 
-    const handleDeleteApplication = (applicationId) => {
-        if (!window.confirm("Are you sure you want to delete this application?")) return;
-
-        apiFetch(`/applications/${applicationId}`, {
-            method: 'DELETE',
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to delete application');
-            }
-            return response.json();
-        })
-        .then(() => {
-            setApplications(applications.filter(app => app.application_id !== applicationId));
-            alert('Application deleted successfully!');
-        })
-        .catch(error => {
-            console.error('Error deleting application:', error);
-        });
-    };
-
-    if (!user_id) {
-        return <p>Please log in to view your applications.</p>;
-    }
-
-    if (loading) {
-        return <p>Loading applications...</p>;
+    if (!user_id) return <Container sx={{ mt: 4 }}><Alert severity="warning">Please log in.</Alert></Container>;
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    if (applications.length === 0) {
+        return (
+            <Container maxWidth="md" sx={{ py: 6 }}>
+                <EmptyState
+                    icon="work"
+                    title="No applications yet"
+                    message="Start applying to jobs and track your progress here!"
+                    actionLabel="Find Jobs"
+                    onAction={() => navigate('/Jobs')}
+                />
+            </Container>
+        );
     }
 
     return (
-        <div className="applications-container">
-            <h1>Your Applications</h1>
-            {applications.length === 0 ? (
-                <p>You haven't applied to any jobs yet.</p>
-            ) : (
-                <div className="application-list">
-                    {applications.map((application) => (
-                        <div key={application.application_id} className="application-card">
-                            <h3>{application.job_title}</h3>
-                            <p><strong>Company:</strong> {application.company_name}</p>
-                            <p><strong>Location:</strong> {application.company_location}</p>
-                            <p><strong>Salary:</strong> {application.job_salary}</p>
-                            <p><strong>Applied At:</strong> {new Date(application.application_date).toLocaleString()}</p>
-                            <button 
-                                className="delete-button"
-                                onClick={() => handleDeleteApplication(application.application_id)}
-                            >
-                                ❌ Delete Application
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Typography variant="h4" sx={{ mb: 4 }}>Your Applications</Typography>
+            <Stack spacing={2}>
+                {applications.map(app => (
+                    <Card key={app.application_id}>
+                        <CardContent>
+                            <Typography variant="h6">{app.job_title}</Typography>
+                            <Typography color="text.secondary">{app.company_name}</Typography>
+                            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <LocationOnIcon fontSize="small" color="action" />
+                                    <Typography variant="body2">{app.company_location}</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <AttachMoneyIcon fontSize="small" color="action" />
+                                    <Typography variant="body2">${app.job_salary}</Typography>
+                                </Stack>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                Applied: {new Date(app.application_date).toLocaleString()}
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button color="error" size="small" startIcon={<DeleteIcon />} onClick={() => handleDelete(app.application_id)}>
+                                Delete
+                            </Button>
+                        </CardActions>
+                    </Card>
+                ))}
+            </Stack>
+        </Container>
     );
 }
 

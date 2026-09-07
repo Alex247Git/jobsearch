@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../../services/socket';
 import {
@@ -15,6 +15,10 @@ import {
     useMediaQuery,
     IconButton,
     Tooltip,
+    Chip,
+    Avatar,
+    Stack,
+    Divider,
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -23,15 +27,21 @@ import StarIcon from '@mui/icons-material/Star';
 import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import WorkIcon from '@mui/icons-material/Work';
 import { apiFetch } from '../../api';
+import { useNotification } from '../../context/NotificationContext';
 import JobFilters from './JobFilters';
 import JobCard from './JobCard';
 import MessageDialog from './MessageDialog';
+import { JobListSkeleton } from '../../components/Skeletons';
 
 function Jobs({ user }) {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const notify = useNotification();
 
     const [jobs, setJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
@@ -46,19 +56,31 @@ function Jobs({ user }) {
     const [recommendedJobs, setRecommendedJobs] = useState([]);
     const [companyRatings, setCompanyRatings] = useState([]);
     const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [sliderIndex, setSliderIndex] = useState(0);
+    const sliderRef = useRef(null);
+    const visibleItems = 3;
+
+    const scrollSlider = (direction) => {
+        if (!recommendedJobs.length) return;
+        const maxIndex = Math.max(0, recommendedJobs.length - visibleItems);
+        if (direction === 'left') {
+            setSliderIndex(prev => Math.max(0, prev - 1));
+        } else {
+            setSliderIndex(prev => Math.min(maxIndex, prev + 1));
+        }
+    };
 
 
     useEffect(() => {
+        setLoading(true);
         apiFetch(`/jobs`)
             .then(response => response.json())
             .then(data => {
-                console.log("Raw fetched data:", data);
-                if (Array.isArray(data)) {
-                    console.log("Sample job:", data[0]);
-                }
-                setJobs(data);
+                setJobs(Array.isArray(data) ? data : []);
             })
-            .catch(error => console.error('Error fetching jobs:', error));
+            .catch(error => console.error('Error fetching jobs:', error))
+            .finally(() => setLoading(false));
     }, []);
 
     useEffect(() => {
@@ -66,15 +88,13 @@ function Jobs({ user }) {
             apiFetch(`/applications/candidate/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Applied Jobs:", data);
-                    setAppliedJobs(data.map(application => application.job_id));
+                    setAppliedJobs(Array.isArray(data) ? data.map(application => application.job_id) : []);
                 })
                 .catch(error => console.error('Error fetching applied jobs:', error));
             apiFetch(`/saved_jobs/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Saved Jobs:", data);
-                    setSavedJobs(data.map(job => job.job_id));
+                    setSavedJobs(Array.isArray(data) ? data.map(job => job.job_id) : []);
                 })
                 .catch(error => console.error('Error fetching saved jobs:', error));
         }
@@ -88,7 +108,6 @@ function Jobs({ user }) {
                     setCompanyRatings(data);
                 } else {
                     setCompanyRatings([]);
-                    console.log('No company ratings found');
                 }
             })
             .catch(error => console.error('Error fetching company ratings:', error));
@@ -99,8 +118,7 @@ function Jobs({ user }) {
             apiFetch(`/recommendations/jobs/${user.user_id}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log("Recommended Jobs:", data);
-                    setRecommendedJobs(data);
+                    setRecommendedJobs(Array.isArray(data) ? data : []);
                 })
                 .catch(error => console.error("Error fetching recommended jobs:", error));
         }
@@ -117,61 +135,48 @@ function Jobs({ user }) {
     }, []);
 
     const handleApplication = (jobId) => {
-        console.log('📨 Submitting application with:', {
-            user_id: user.user_id,
-            job_id: jobId,
-            status: 'pending',
-            applied_at: new Date().toISOString(),
-        });
-
         if (!user?.user_id) {
-            alert('You need to log in to apply for jobs.');
+            notify.warning('Please log in to apply for jobs.');
             return;
         }
-
         if (appliedJobs.includes(jobId)) {
-            alert('You have already applied for this job.');
+            notify.info('You have already applied for this job.');
             return;
         }
-
         apiFetch(`/applications`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${user.token}`,
+            },
             body: JSON.stringify({
-                user_id: user.user_id,
                 job_id: jobId,
                 status: 'pending',
-                applied_at: new Date().toISOString(),
             }),
         })
             .then(async response => {
                 const data = await response.json();
-                console.log('📬 Response from server:', data);
-
                 if (!response.ok) {
                     throw new Error(data.error || "Failed to apply for job.");
                 }
-
-                alert('Application submitted successfully!');
+                notify.success('Application submitted successfully!');
                 setAppliedJobs(prev => [...prev, jobId]);
             })
             .catch(error => {
                 console.error('❌ Error applying for job:', error);
-                alert(error.message);
+                notify.error(error.message || 'Failed to submit application.');
             });
     };
 
     const handleSaveJob = (jobId) => {
         if (!user || !user.user_id) {
-            alert('You need to be logged in to save jobs.');
+            notify.warning('Please log in to save jobs.');
             return;
         }
-
         if (savedJobs.includes(jobId)) {
-            alert('This job is already saved.');
+            notify.info('This job is already saved.');
             return;
         }
-
         apiFetch(`/saved_jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -183,11 +188,12 @@ function Jobs({ user }) {
         })
             .then(response => response.json())
             .then(() => {
-                alert('Job saved successfully!');
+                notify.success('Job saved successfully!');
                 setSavedJobs([...savedJobs, jobId]);
             })
             .catch(error => {
                 console.error('Error saving job:', error);
+                notify.error('Failed to save job. Please try again.');
             });
     };
 
@@ -218,7 +224,7 @@ function Jobs({ user }) {
 
     const handleSendMessage = () => {
         if (!user?.user_id || !selectedEmployer || !messageText.trim()) {
-            alert('Please enter a message before sending.');
+            notify.warning('Please enter a message before sending.');
             return;
         }
 
@@ -237,13 +243,16 @@ function Jobs({ user }) {
             .then((newMessage) => {
                 if (newMessage.error) {
                     console.error("Message sending error:", newMessage.error);
+                    notify.error('Failed to send message.');
                     return;
                 }
                 setChatHistory([...chatHistory, newMessage]);
                 setMessageText("");
+                notify.success('Message sent successfully!');
             })
             .catch(error => {
                 console.error('Error sending message:', error);
+                notify.error('Failed to send message. Please try again.');
             });
     };
 
@@ -325,118 +334,51 @@ function Jobs({ user }) {
                     </Typography>
 
                     {/* Job Listings */}
-                    {/* Recommended Jobs */}
+                    {/* Recommended Jobs Slider */}
                     {recommendedJobs.length > 0 && (
-                        <Box sx={{ mb: 4 }}>
-                            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
-                                🔍 Recommended for You
-                            </Typography>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    gap: 2,
-                                    overflowX: 'auto',
-                                    pb: 2,
-                                    '&::-webkit-scrollbar': {
-                                        height: 6,
-                                    },
-                                    '&::-webkit-scrollbar-track': {
-                                        backgroundColor: '#f1f1f1',
-                                        borderRadius: 3,
-                                    },
-                                    '&::-webkit-scrollbar-thumb': {
-                                        backgroundColor: 'primary.main',
-                                        borderRadius: 3,
-                                    },
-                                }}
-                            >
-                                {recommendedJobs.map((job) => (
-                                    <Card
-                                        key={`recommended-${job.job_id}`}
-                                        sx={{
-                                            minWidth: 300,
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: theme.shadows[8],
-                                            },
-                                            border: '2px solid #ffc107',
-                                        }}
-                                        onClick={(e) => {
-                                            if (!e.target.closest("button")) {
-                                                navigate(`/job/${job.job_id}`);
-                                            }
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Typography variant="h6" sx={{ mb: 1, color: '#ffc107' }}>
-                                                {job.title} 🌟
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                                                🔢 Recommendation Score: {job.score ? `${Number(job.score).toFixed(2)} / 10` : "N/A"}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <BusinessIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.company_name}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                {renderStars(getCompanyRating(job.company_id))}
-                                                <Typography variant="body2" sx={{ ml: 1 }}>
-                                                    {getCompanyRating(job.company_id) ? `${getCompanyRating(job.company_id)} / 5` : 'No ratings yet'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <LocationOnIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.location}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <AttachMoneyIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">
-                                                    {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Type:</strong> {job.job_type}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Remote:</strong> {job.remote_option === 1 ? 'Yes' : 'No'}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                                {job.description}
-                                            </Typography>
-                                        </CardContent>
-                                        <CardActions>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                fullWidth
-                                                onClick={() => handleApplication(job.job_id)}
-                                                disabled={appliedJobs.includes(job.job_id)}
-                                            >
-                                                {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                                            </Button>
-                                            <Tooltip title="Message Employer">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleSelectEmployer(job)}
-                                                >
-                                                    <MessageIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={savedJobs.includes(job.job_id) ? 'Saved' : 'Save Job'}>
-                                                <IconButton
-                                                    color={savedJobs.includes(job.job_id) ? 'secondary' : 'default'}
-                                                    onClick={() => handleSaveJob(job.job_id)}
-                                                    disabled={savedJobs.includes(job.job_id)}
-                                                >
-                                                    {savedJobs.includes(job.job_id) ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                                                </IconButton>
-                                            </Tooltip>
-                                        </CardActions>
-                                    </Card>
+                        <Box sx={{ mb: 5 }}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <WorkIcon color="primary" />
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                        🔍 Recommended for You
+                                    </Typography>
+                                    <Chip label={`${recommendedJobs.length} jobs`} size="small" color="primary" variant="outlined" />
+                                </Stack>
+                                {recommendedJobs.length > 1 && (
+                                    <Stack direction="row" spacing={1}>
+                                        <IconButton onClick={() => scrollSlider('left')} disabled={sliderIndex === 0} size="small"
+                                            sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
+                                            <ArrowBackIosNewIcon fontSize="small" />
+                                        </IconButton>
+                                        <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center', minWidth: 40, textAlign: 'center' }}>
+                                            {sliderIndex + 1}-{Math.min(sliderIndex + visibleItems, recommendedJobs.length)} / {recommendedJobs.length}
+                                        </Typography>
+                                        <IconButton onClick={() => scrollSlider('right')} disabled={sliderIndex >= recommendedJobs.length - 1} size="small"
+                                            sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
+                                            <ArrowForwardIosIcon fontSize="small" />
+                                        </IconButton>
+                                    </Stack>
+                                )}
+                            </Stack>
+                            <Grid container spacing={3}>
+                                {recommendedJobs.slice(sliderIndex, sliderIndex + visibleItems).map((job) => (
+                                    <JobCard
+                                        key={`rec-${job.job_id}`}
+                                        job={job}
+                                        saved={savedJobs.includes(job.job_id)}
+                                        applied={appliedJobs.includes(job.job_id)}
+                                        rating={getCompanyRating(job.company_id)}
+                                        renderStars={renderStars}
+                                        onOpen={(jobId) => navigate(`/job/${jobId}`)}
+                                        onApply={handleApplication}
+                                        onMessage={handleSelectEmployer}
+                                        onSave={handleSaveJob}
+                                        recommended
+                                        score={job.score}
+                                    />
                                 ))}
-                            </Box>
+                            </Grid>
                         </Box>
                     )}
 
@@ -445,7 +387,9 @@ function Jobs({ user }) {
                         All Jobs
                     </Typography>
 
-                    {filteredJobs.length > 0 ? (
+                    {loading ? (
+                        <JobListSkeleton count={6} />
+                    ) : filteredJobs.length > 0 ? (
                         <Grid container spacing={3} sx={{ px: 0 }}>
                             {filteredJobs.map((job) => (
                                 <JobCard

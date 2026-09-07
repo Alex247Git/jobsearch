@@ -37,13 +37,18 @@ const errorHandler = require('./middleware/errorHandler');
 
 app.use(helmet());
 
-// Brute-force protection for the login endpoint
+// Brute-force protection for the login endpoint.
+// Note: in-memory store — restarts clear the counter, so in
+// development restart the server if you lock yourself out.
+// For production use a persistent store (Redis via rate-limit-redis).
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: 'Too many login attempts, please try again later' },
+    message: {
+        error: 'Too many login attempts. Please try again in 15 minutes or restart the backend.',
+    },
 });
 app.use('/users/login', loginLimiter);
 
@@ -79,6 +84,9 @@ app.use(errorHandler);
 if (require.main === module) {
     server.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
+        // Start recommendation generation in background
+        const recommendationService = require('./services/recommendationService');
+        recommendationService.initRecommendations();
     });
 }
 

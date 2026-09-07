@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Link } from 'react-router-dom';
-import "./Companies.css"; 
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import {
+    Container, Box, Paper, Avatar, Typography, Stack, Link as MuiLink,
+    Divider, CircularProgress, Alert, Button,
+} from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import StarIcon from '@mui/icons-material/Star';
 import { apiFetch } from '../api';
 
 function Company() {
@@ -11,61 +15,44 @@ function Company() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (!companyId) {
-            console.error("❌ No companyId found in URL.");
-            setError("No company ID found.");
-            setLoading(false);
-            return;
-        }
-
-        const fetchCompany = async () => {
-            console.log(`📡 Fetching company for company_id: ${companyId}`);
-            try {
-                const response = await apiFetch(`/companies/${companyId}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch company: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                console.log("✅ Company data received:", data);
-                setCompany(data);
-            } catch (err) {
-                console.error("⚠️ Error fetching company:", err);
-                setError("Failed to load company info. Please try again later.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCompany();
+        if (!companyId) { setError('No company ID found.'); setLoading(false); return; }
+        apiFetch(`/companies/${companyId}`)
+            .then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); })
+            .then(d => { setCompany(d); setLoading(false); })
+            .catch(e => { setError('Failed to load company.'); setLoading(false); });
     }, [companyId]);
 
-    if (loading) return <p className="loading-text">Loading company details...</p>;
-    if (error) return <p className="error-text">{error}</p>;
-    if (!company) return <p className="error-text">No company found</p>;
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    if (error) return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
+    if (!company) return <Container sx={{ mt: 4 }}><Alert severity="info">No company found</Alert></Container>;
 
     return (
-        <div className="company-container">
-            <div className="company-header">
-                <img
-                    src={company.logo || "/default-company-logo.png"}
-                    alt="Company Logo"
-                    className="company-logo"
-                />
-                <h1>{company.name}</h1>
-                <p className="company-location">📍 {company.location || "Location not specified"}</p>
-            </div>
-
-            <div className="company-info">
-                <p><strong>Description:</strong> {company.description || "No description available"}</p>
-                <p><strong>Website:</strong> {company.website ? <a href={company.website} target="_blank" rel="noopener noreferrer">{company.website}</a> : "Not provided"}</p>
-                <p><strong>Founded:</strong> {company.founded_year || "Unknown"}</p>
-                <p><strong>Industry:</strong> {company.industry || "Not specified"}</p>
-                <p><strong>Number of Employees:</strong> {company.employees_count || "Unknown"}</p>
-                <p><strong>Posted Jobs:</strong> {company.posted_jobs?.length || 0}</p>
-            </div>
-            <Link to={`/Rating/${companyId}`}>Rate this company</Link>
-        </div>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Paper sx={{ p: 4, borderRadius: 3 }} elevation={1}>
+                <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
+                    <Avatar src={company.logo || '/default-company-logo.png'} sx={{ width: 120, height: 120, bgcolor: 'background.default' }} />
+                    <Typography variant="h4" sx={{ color: 'text.primary' }}>{company.name}</Typography>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                        <LocationOnIcon fontSize="small" color="action" />
+                        <Typography variant="body1" color="text.secondary">{company.location || 'Location not specified'}</Typography>
+                    </Stack>
+                </Stack>
+                <Divider sx={{ my: 2 }} />
+                <Stack spacing={1.5}>
+                    <Typography><strong>Description:</strong> {company.description || 'No description available'}</Typography>
+                    <Typography><strong>Website:</strong> {company.website ? <MuiLink href={company.website} target="_blank" rel="noopener noreferrer">{company.website}</MuiLink> : 'Not provided'}</Typography>
+                    <Typography><strong>Founded:</strong> {company.founded_year || 'Unknown'}</Typography>
+                    <Typography><strong>Industry:</strong> {company.industry || 'Not specified'}</Typography>
+                    <Typography><strong>Number of Employees:</strong> {company.employees_count || 'Unknown'}</Typography>
+                    <Typography><strong>Posted Jobs:</strong> {company.posted_jobs?.length || 0}</Typography>
+                </Stack>
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Button component={Link} to={`/Rating/${companyId}`} variant="contained" startIcon={<StarIcon />}>
+                        Rate this company
+                    </Button>
+                </Box>
+            </Paper>
+        </Container>
     );
 }
 

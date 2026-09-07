@@ -19,8 +19,8 @@ module.exports = (server, db) => {
             const { senderId, receiverId, messageContent } = data;
             const timestamp = new Date();
             try {
-                const query = `INSERT INTO messages (sender_id, receiver_id, message_content, timestamp) VALUES (?, ?, ?, ?)`;
-                await db.promise().query(query, [senderId, receiverId, messageContent, timestamp]);
+                const query = `INSERT INTO messages (sender_id, receiver_id, message, sent_at) VALUES (?, ?, ?, NOW())`;
+                await db.promise().query(query, [senderId, receiverId, messageContent]);
                 console.log(`Message saved from ${senderId} to ${receiverId}: "${messageContent}"`);
                 if (userSockets[receiverId]) {
                     io.to(userSockets[receiverId]).emit('receiveMessage', {

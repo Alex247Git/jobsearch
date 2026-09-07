@@ -31,10 +31,10 @@ router.post('/', authenticateToken, async (req, res) => {
 // GET all messages
 router.get("/", authenticateToken, async (req, res) => {
     try {
-        const [results] = await db.promise().query("SELECT * FROM messages ORDER BY created_at ASC");
+        const [results] = await db.promise().query("SELECT * FROM messages ORDER BY sent_at ASC");
 
         if (results.length === 0) {
-            return res.status(404).json({ error: "No messages found" });
+            return res.status(200).json([]);
         }
 
         res.status(200).json(results);
@@ -103,7 +103,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
     }
 
     try {
-        const query = `UPDATE messages SET message_content = ? WHERE message_id = ?`;
+        const query = `UPDATE messages SET message = ? WHERE message_id = ?`;
         const [result] = await db.promise().query(query, [message_content, messageId]);
 
         if (result.affectedRows === 0) {

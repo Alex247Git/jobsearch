@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import './MyEmployees.css';
+import {
+    Container, Box, Paper, Stack, Typography, TextField, Select, MenuItem, FormControl, InputLabel,
+    Button, Alert, Divider, Link as MuiLink, Box as MuiBox,
+} from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import SchoolIcon from '@mui/icons-material/School';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import LanguageIcon from '@mui/icons-material/Language';
 import { apiFetch } from '../api';
 
 const MyEmployees = () => {
@@ -7,113 +14,73 @@ const MyEmployees = () => {
     const [ratings, setRatings] = useState({});
     const [comments, setComments] = useState({});
     const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
     const employerId = localStorage.getItem('user_id');
 
     useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                const res = await apiFetch(`/employed/employer/${employerId}`);
-                const data = await res.json();
-                setEmployees(data);
-            } catch (error) {
-                console.error('Error fetching employees:', error);
-            }
-        };
-
-        if (employerId) {
-            fetchEmployees();
-        }
+        if (!employerId) return;
+        apiFetch(`/employed/employer/${employerId}`)
+            .then(r => r.json()).then(setEmployees)
+            .catch(err => setError('Failed to load employees'));
     }, [employerId]);
 
-    const handleRatingChange = (candidateId, value) => {
-        setRatings({ ...ratings, [candidateId]: value });
-    };
-
-    const handleCommentChange = (candidateId, value) => {
-        setComments({ ...comments, [candidateId]: value });
-    };
-
     const handleSubmit = async (candidateId) => {
+        const rating = ratings[candidateId];
+        const comment = comments[candidateId];
+        if (!rating) { setMessage('Please select a rating.'); return; }
         try {
-            const rating = ratings[candidateId];
-            const comment = comments[candidateId];
-
-            const res = await apiFetch(`/candidate_ratings`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    candidate_id: candidateId,
-                    employer_id: employerId,
-                    rating,
-                    comment,
-                }),
+            const r = await apiFetch('/candidate_ratings', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ candidate_id: candidateId, employer_id: employerId, rating, comment }),
             });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                setMessage(data.message || 'Rating submitted successfully');
-            } else {
-                setMessage(data.error || 'Something went wrong');
-            }
-        } catch (error) {
-            console.error('Error submitting rating:', error);
-            setMessage('Error submitting rating');
-        }
+            const data = await r.json();
+            setMessage(r.ok ? (data.message || 'Rating submitted') : (data.error || 'Failed to submit'));
+        } catch { setMessage('Error submitting rating'); }
     };
 
     return (
-        <div className="my-employees-container">
-            <h2>My Employees</h2>
-            {employees.length === 0 && <p>No employees found.</p>}
-
-            <div className="my-employees-grid">
-                {employees.map((emp) => (
-                    <div key={emp.user_id} className="my-employees-card">
-                        <h3>{emp.first_name} {emp.last_name}</h3>
-                        <p>{emp.email}</p>
-                        <p>📍 Location: {emp.location || 'N/A'}</p>
-                        <p>🎓 Education: {emp.education || 'N/A'}</p>
-                        <p>🎖️ Certifications: {emp.certifications || 'N/A'}</p>
-                        <p>🗣️ Languages: {emp.languages || 'N/A'}</p>
-
-                        {emp.website && (
-                            <p>🔗 Website: <a href={emp.website} target="_blank" rel="noopener noreferrer">{emp.website}</a></p>
-                        )}
-                        {emp.social_links && (
-                            <p>🌐 Social: <a href={emp.social_links} target="_blank" rel="noopener noreferrer">{emp.social_links}</a></p>
-                        )}
-
-                        <label>Rating:</label>
-                        <select
-                            value={ratings[emp.user_id] || ''}
-                            onChange={(e) => handleRatingChange(emp.user_id, e.target.value)}
-                        >
-                            <option value="">Select Rating</option>
-                            {[1, 2, 3, 4, 5].map((num) => (
-                                <option key={num} value={num}>
-                                    {num} Star{num > 1 ? 's' : ''}
-                                </option>
-                            ))}
-                        </select>
-
-                        <label>Comment:</label>
-                        <textarea
-                            rows="3"
-                            value={comments[emp.user_id] || ''}
-                            onChange={(e) => handleCommentChange(emp.user_id, e.target.value)}
-                            placeholder="Write a comment about this employee..."
-                        />
-
-                        <button onClick={() => handleSubmit(emp.user_id)}>Submit Rating</button>
-                    </div>
-                ))}
-            </div>
-
-            {message && <p className="my-employees-message">{message}</p>}
-        </div>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Typography variant="h4" sx={{ mb: 4 }}>My Employees</Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
+            {employees.length === 0 ? (
+                <Alert severity="info">No employees found.</Alert>
+            ) : (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+                    {employees.map(emp => (
+                        <Paper key={emp.user_id} sx={{ p: 3 }} elevation={1}>
+                            <Typography variant="h6">{emp.first_name} {emp.last_name}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{emp.email}</Typography>
+                            <Divider sx={{ my: 1.5 }} />
+                            <Stack spacing={0.5} sx={{ mb: 2 }}>
+                                {emp.location && <Stack direction="row" spacing={0.5} alignItems="center"><LocationOnIcon fontSize="small" color="action" /><Typography variant="body2">{emp.location}</Typography></Stack>}
+                                {emp.education && <Stack direction="row" spacing={0.5} alignItems="center"><SchoolIcon fontSize="small" color="action" /><Typography variant="body2">{emp.education}</Typography></Stack>}
+                                {emp.certifications && <Stack direction="row" spacing={0.5} alignItems="center"><EmojiEventsIcon fontSize="small" color="action" /><Typography variant="body2">{emp.certifications}</Typography></Stack>}
+                                {emp.languages && <Stack direction="row" spacing={0.5} alignItems="center"><LanguageIcon fontSize="small" color="action" /><Typography variant="body2">{emp.languages}</Typography></Stack>}
+                            </Stack>
+                            {(emp.website || emp.social_links) && (
+                                <Stack spacing={0.5} sx={{ mb: 2 }}>
+                                    {emp.website && <MuiLink href={emp.website} target="_blank" rel="noopener noreferrer">Website</MuiLink>}
+                                    {emp.social_links && <MuiLink href={emp.social_links} target="_blank" rel="noopener noreferrer">Social</MuiLink>}
+                                </Stack>
+                            )}
+                            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                                <InputLabel>Rating</InputLabel>
+                                <Select value={ratings[emp.user_id] || ''} label="Rating"
+                                    onChange={(e) => setRatings({ ...ratings, [emp.user_id]: e.target.value })}>
+                                    <MenuItem value="">Select rating</MenuItem>
+                                    {[1, 2, 3, 4, 5].map(n => <MenuItem key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</MenuItem>)}
+                                </Select>
+                            </FormControl>
+                            <TextField fullWidth multiline rows={3} size="small" placeholder="Write a comment..."
+                                value={comments[emp.user_id] || ''} sx={{ mb: 2 }}
+                                onChange={(e) => setComments({ ...comments, [emp.user_id]: e.target.value })} />
+                            <Button variant="contained" onClick={() => handleSubmit(emp.user_id)}>Submit Rating</Button>
+                        </Paper>
+                    ))}
+                </Box>
+            )}
+        </Container>
     );
 };
 
