@@ -52,11 +52,7 @@ function Jobs({ user }) {
         apiFetch(`/jobs`)
             .then(response => response.json())
             .then(data => {
-                console.log("Raw fetched data:", data);
-                if (Array.isArray(data)) {
-                    console.log("Sample job:", data[0]);
-                }
-                setJobs(data);
+                setJobs(Array.isArray(data) ? data : []);
             })
             .catch(error => console.error('Error fetching jobs:', error));
     }, []);
@@ -66,15 +62,13 @@ function Jobs({ user }) {
             apiFetch(`/applications/candidate/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Applied Jobs:", data);
-                    setAppliedJobs(data.map(application => application.job_id));
+                    setAppliedJobs(Array.isArray(data) ? data.map(application => application.job_id) : []);
                 })
                 .catch(error => console.error('Error fetching applied jobs:', error));
             apiFetch(`/saved_jobs/${user.user_id}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Saved Jobs:", data);
-                    setSavedJobs(data.map(job => job.job_id));
+                    setSavedJobs(Array.isArray(data) ? data.map(job => job.job_id) : []);
                 })
                 .catch(error => console.error('Error fetching saved jobs:', error));
         }
@@ -88,7 +82,6 @@ function Jobs({ user }) {
                     setCompanyRatings(data);
                 } else {
                     setCompanyRatings([]);
-                    console.log('No company ratings found');
                 }
             })
             .catch(error => console.error('Error fetching company ratings:', error));
@@ -99,8 +92,7 @@ function Jobs({ user }) {
             apiFetch(`/recommendations/jobs/${user.user_id}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log("Recommended Jobs:", data);
-                    setRecommendedJobs(data);
+                    setRecommendedJobs(Array.isArray(data) ? data : []);
                 })
                 .catch(error => console.error("Error fetching recommended jobs:", error));
         }

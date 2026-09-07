@@ -37,6 +37,12 @@ function Profile({ user }) {
         const fetchProfileData = async () => {
             try {
                 const profileRes = await apiFetch(`/profiles/${viewedUserId}`);
+                if (profileRes.status === 404) {
+                    // No profile yet — show an empty editable form instead of an error
+                    setProfile(null);
+                    setFormData({});
+                    return;
+                }
                 if (!profileRes.ok) throw new Error("Failed to fetch profile");
                 const profileJson = await profileRes.json();
                 setProfile(profileJson);
@@ -59,8 +65,8 @@ function Profile({ user }) {
 
     const handleSave = async () => {
         try {
-            const response = await apiFetch(`/profiles/${viewedUserId}`, {
-                method: "PUT",
+            const response = await apiFetch(profile ? `/profiles/${viewedUserId}` : "/profiles", {
+                method: profile ? "PUT" : "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${user.token}`
@@ -68,7 +74,7 @@ function Profile({ user }) {
                 body: JSON.stringify(formData)
             });
             if (!response.ok) throw new Error("Failed to update profile");
-            setProfile({ ...profile, ...formData });
+            setProfile({ ...(profile || { user_id: viewedUserId }), ...formData });
             setIsEditing(false);
         } catch (err) {
             setError("Failed to update profile.");
@@ -77,9 +83,9 @@ function Profile({ user }) {
 
     if (loading) return <p className="loading-text">Loading profile...</p>;
     if (error) return <p className="error-text">{error}</p>;
-    if (!profile || !userData) return <p className="error-text">No profile or user data found</p>;
+    if (!userData) return <p className="error-text">No user data found</p>;
 
-    const isOwner = user && String(user.user_id) === String(profile.user_id);
+    const isOwner = user && String(user.user_id) === String(profile?.user_id ?? viewedUserId);
 
     return (
         <div className="profile-container">
