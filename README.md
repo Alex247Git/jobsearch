@@ -35,6 +35,7 @@ What makes it stand out from a typical tutorial project:
 | 🏗️ **CI/CD** | GitHub Actions: backend tests + frontend tests + production build on every push |
 | 📦 **Clean deps** | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides |
 | 🏎️ **Modern stack** | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express |
+| 🎨 **Polished UI** | Toast notifications, loading skeletons, empty states, smooth micro-interactions |
 
 ---
 
@@ -42,7 +43,8 @@ What makes it stand out from a typical tutorial project:
 
 ### 👤 For candidates
 - **4-step registration wizard** (user info → profile → candidate details → ready)
-- **Personalized recommendations** — top 10 jobs ranked by AI semantic similarity
+- **Personalized recommendations** — AI-ranked jobs with match percentage score
+- **Recommendation carousel** — 3-at-a-time slider with golden border highlights
 - **Save & apply** to jobs with one click
 - **Real-time chat** with employers
 - **Search history** tracked automatically
@@ -55,6 +57,14 @@ What makes it stand out from a typical tutorial project:
 - **Employee management** (track current & past)
 - **Real-time chat** with candidates
 - **Candidate recommendations** based on job requirements
+
+### 🎨 Modern UX
+- **Toast notifications** — non-blocking feedback for all actions
+- **Loading skeletons** — animated placeholders while data loads
+- **Empty states** — helpful messages with CTAs when no data exists
+- **Form validation** — real-time validation with helper text and visual cues
+- **Micro-interactions** — smooth hover effects, button transitions, focus glow
+- **Responsive design** — works on mobile, tablet, and desktop
 
 ### 🛡️ Security (the "boring" stuff that actually matters)
 - **JWT authentication** with role-based authorization (candidate / employer)
@@ -76,6 +86,7 @@ What makes it stand out from a typical tutorial project:
 │   - 16 pages, organized in folders      │
 │   - React Context for auth              │
 │   - Real-time socket.io client          │
+│   - Toast notifications + skeletons     │
 └────────────────┬────────────────────────┘
                  │  REST + JWT + WebSocket
                  ▼
@@ -179,6 +190,20 @@ npm start         # http://localhost:3000
 
 ---
 
+## 🔑 Demo Accounts
+
+| Email | Password | Role | Use Case |
+|-------|----------|------|----------|
+| eleni.cand@gmail.com | Passw0rd!123 | candidate | Full profile, recommendations, messages |
+| costas.cand@gmail.com | Passw0rd!123 | candidate | Profile with applications |
+| alex.empty@gmail.com | Passw0rd!123 | candidate | Empty states testing |
+| sofi.fresh@gmail.com | Passw0rd!123 | candidate | Profile creation flow |
+| maria@techcorp.gr | Passw0rd!123 | employer | 3 jobs posted |
+| nikos@webflow.gr | Passw0rd!123 | employer | 3 jobs posted |
+| elena@fintech.gr | Passw0rd!123 | employer | 1 job (Data Engineer) |
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Why |
@@ -187,6 +212,7 @@ npm start         # http://localhost:3000
 | **UI library** | MUI 7 + Emotion | Accessible, themeable, production-grade |
 | **Routing** | React Router 6 | De-facto standard |
 | **Real-time** | Socket.io 4 | Battle-tested WebSocket abstraction |
+| **Notifications** | MUI Snackbar + Context | Non-blocking toast system |
 | **Backend** | Express 4 + Node 20 | Simple, ubiquitous, well-supported |
 | **Database** | MySQL 8 | Relational data with strong integrity |
 | **Auth** | jsonwebtoken + bcrypt | Industry standard |
@@ -210,6 +236,9 @@ All authenticated routes expect: `Authorization: Bearer <token>`
 | `GET` | `/jobs/:id` | public | Get job details |
 | `POST` | `/jobs` | employer | Post a new job |
 | `GET` | `/recommendations/jobs/:candidate_id` | self | Top matching jobs (AI) |
+| `GET` | `/recommendations/candidates/:userId` | self | Top matching candidates (AI) |
+| `POST` | `/recommendations/generate` | auth | Trigger generation |
+| `GET` | `/recommendations/status` | auth | Check status |
 | `POST` | `/messages` | self | Send message |
 | `GET` | `/messages/conversations/:user_id` | self | Your conversations |
 | `POST` | `/applications` | self | Apply to a job |
@@ -223,14 +252,22 @@ All authenticated routes expect: `Authorization: Bearer <token>`
 
 When a candidate registers, their profile is converted to a **vector embedding** using the `all-MiniLM-L6-v2` model (a local 90MB sentence-transformer). The same happens for every job posting.
 
-1. Job created → embed its text (title + description + skills)
-2. Candidate logs in → look up their embedding
-3. **Cosine similarity** between job vector and candidate vector
-4. Top 10 sorted by score returned as recommendations
+1. **Profile + Job → Embedding** — text converted to 384-dim vector
+2. **Cosine similarity** — between job vector and candidate vector
+3. **Score normalization** — scaled to 0-10 match score
+4. **Top results** — sorted by score, returned with percentage match
+
+### Triggers
+| Event | Action |
+|-------|--------|
+| Server startup | Generate all recommendations |
+| Profile created/updated | Regenerate for that user |
+| Daily (3 AM) | Refresh all recommendations |
+| Manual | `POST /recommendations/generate` |
 
 The model runs **locally** via ONNX Runtime — no API keys, no per-request costs, no data leaving your server.
 
-Smoke-tested: a frontend resume scores **6.2** vs **0** for an unrelated accounting resume on a frontend-dev job.
+Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated candidate on a frontend-dev job.
 
 ---
 
