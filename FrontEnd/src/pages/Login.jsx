@@ -73,7 +73,7 @@ function Login() {
                         borderRadius: '16px',
                         backgroundColor: 'white',
                         overflow: 'hidden',
-                        border: '4px solid #282c34',
+                        border: '4px solid', borderColor: 'divider',
                         mx: 'auto',
                     }}
                 >
@@ -139,7 +139,7 @@ function Login() {
                         sx={{
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
-                                    borderColor: '#282c34',
+                                    borderColor: 'divider',
                                 },
                                 '&:hover fieldset': {
                                     borderColor: 'secondary.main',
@@ -176,7 +176,7 @@ function Login() {
                         sx={{
                             '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
-                                    borderColor: '#282c34',
+                                    borderColor: 'divider',
                                 },
                                 '&:hover fieldset': {
                                     borderColor: 'secondary.main',
@@ -200,10 +200,10 @@ function Login() {
                         sx={{
                             mt: 2,
                             py: 1.5,
-                            backgroundColor: '#b4f000 !important',
-                            color: '#282c34 !important',
+                            backgroundColor: 'primary.main',
+                            color: 'primary.contrastText',
                             '&:hover': {
-                                backgroundColor: '#a0d600 !important',
+                                backgroundColor: 'primary.dark',
                             },
                             textTransform: 'none',
                             fontWeight: 'bold',
@@ -227,7 +227,7 @@ function Login() {
                         component={Link}
                         to="/register"
                         sx={{
-                            color: '#667eea',
+                            color: 'primary.main',
                             textTransform: 'none',
                             fontWeight: 'bold',
                             p: 0,
