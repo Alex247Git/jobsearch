@@ -4,7 +4,7 @@ const db = require('../db');
 const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST new saved job
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { job_id } = req.body;
     const user_id = req.user.user_id; // server-authoritative
     const role = req.user.role;
@@ -19,42 +19,36 @@ router.post('/', authenticateToken, (req, res) => {
     const checkCandidateQuery = 'SELECT * FROM users WHERE role = ? AND user_id = ?';
     const checkJobQuery = 'SELECT * FROM jobs WHERE job_id = ?';
 
-    db.query(checkCandidateQuery, [role, user_id], (err, candidateResults) => {
-        if (err || candidateResults.length === 0) {
-            console.error('User not found or error occurred:', err || 'Invalid user or role mismatch');
+    try {
+        const [candidateResults] = await db.promise().query('SELECT * FROM users WHERE role = ? AND user_id = ?', [role, user_id]);
+        if (candidateResults.length === 0) {
             return res.status(400).json({ message: 'Invalid user_id or role does not match' });
         }
 
-        db.query(checkJobQuery, [job_id], (err, jobResults) => {
-            if (err || jobResults.length === 0) {
-                console.error('Job not found or error occurred:', err || 'Job not found');
-                return res.status(400).json({ message: 'Invalid job_id' });
-            }
+        const [jobResults] = await db.promise().query('SELECT * FROM jobs WHERE job_id = ?', [job_id]);
+        if (jobResults.length === 0) {
+            return res.status(400).json({ message: 'Invalid job_id' });
+        }
 
-            const insertQuery = 'INSERT INTO saved_jobs (user_id, job_id, saved_date) VALUES (?, ?, ?)';
-            const sqlParams = [user_id, job_id, saved_date];
+        const [insertResult] = await db.promise().query(
+            'INSERT INTO saved_jobs (user_id, job_id, saved_date) VALUES (?, ?, ?)',
+            [user_id, job_id, saved_date]
+        );
 
-            db.query(insertQuery, sqlParams, (err, insertResult) => {
-                if (err) {
-                    console.error('Error during database operation:', err.stack);
-                    return res.status(500).json({
-                        message: 'An error occurred while saving the job', details: err.message,
-                    });
-                }
-
-                res.status(201).json({
-                    message: 'Job saved successfully',
-                    saved_jobs_id: insertResult.insertId,
-                });
-            });
+        res.status(201).json({
+            message: 'Job saved successfully',
+            saved_jobs_id: insertResult.insertId,
         });
-    });
+    } catch (err) {
+        console.error('Error during database operation:', err.stack);
+        res.status(500).json({ message: 'An error occurred while saving the job', details: err.message });
+    }
 });
 
 
 
 // GET all saved jobs
-router.get('/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
+router.get('/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
 
     const query = `SELECT 
@@ -71,13 +65,13 @@ JOIN jobs ON saved_jobs.job_id = jobs.job_id
 JOIN employers ON jobs.job_id = employers.job_id
 JOIN companies ON employers.company_id = companies.company_id
 WHERE saved_jobs.user_id = ?`;
-    db.query(query, [user_id], (err, results) => {
-        if (err) {
-            console.error('Error fetching saved jobs:', err.stack);
-            return res.status(500).json({ message: 'Failed to fetch saved jobs' });
-        }
+    try {
+        const [results] = await db.promise().query(query, [user_id]);
         res.status(200).json(results);
-    });
+    } catch (err) {
+        console.error('Error fetching saved jobs:', err.stack);
+        res.status(500).json({ message: 'Failed to fetch saved jobs' });
+    }
 });
 
 // GET saved job by user_id and job_id
