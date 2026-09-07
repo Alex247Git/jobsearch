@@ -24,7 +24,7 @@ function SavedJobs({ user }) {
     }, [user_id]);
 
     const handleRemoveJob = (jobId) => {
-        apiFetch(`/saved_jobs/${user_id}/${jobId}`, { method: 'DELETE' })
+        apiFetch(`/saved_jobs/${user_id}/${jobId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } })
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(() => setSavedJobs(s => s.filter(j => j.job_id !== jobId)))
             .catch(err => console.error(err));

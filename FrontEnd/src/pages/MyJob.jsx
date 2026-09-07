@@ -24,7 +24,7 @@ function MyJob({ user }) {
         }
         try {
             const res = await apiFetch('/company_ratings', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
                 body: JSON.stringify({ user_id: user.user_id, company_id: jobInfo.company_id, rating, comment }),
             });
             if (res.ok) { alert('Rating submitted!'); setRating(0); setComment(''); }
@@ -34,7 +34,7 @@ function MyJob({ user }) {
     const handleLeaveJob = async () => {
         if (!window.confirm('Leave this job?')) return;
         try {
-            const res = await apiFetch(`/employed/leavejob/${user.user_id}`, { method: 'DELETE' });
+            const res = await apiFetch(`/employed/leavejob/${user.user_id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } });
             if (res.ok) { alert('You have left the job.'); setJobInfo(null); }
         } catch (err) { console.error(err); }
     };

@@ -23,7 +23,7 @@ function Applications({ user }) {
 
     const handleDelete = (applicationId) => {
         if (!window.confirm('Delete this application?')) return;
-        apiFetch(`/applications/${applicationId}`, { method: 'DELETE' })
+        apiFetch(`/applications/${applicationId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user.token}` } })
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(() => setApplications(a => a.filter(x => x.application_id !== applicationId)))
             .catch(err => console.error(err));

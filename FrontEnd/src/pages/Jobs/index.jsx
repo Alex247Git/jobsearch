@@ -128,9 +128,11 @@ function Jobs({ user }) {
 
         apiFetch(`/applications`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${user.token}`,
+            },
             body: JSON.stringify({
-                user_id: user.user_id,
                 job_id: jobId,
                 status: 'pending',
                 applied_at: new Date().toISOString(),
