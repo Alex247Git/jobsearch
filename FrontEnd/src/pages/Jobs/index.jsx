@@ -135,7 +135,6 @@ function Jobs({ user }) {
             body: JSON.stringify({
                 job_id: jobId,
                 status: 'pending',
-                applied_at: new Date().toISOString(),
             }),
         })
             .then(async response => {

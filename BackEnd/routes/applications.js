@@ -8,7 +8,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 
 // POST new application
 router.post('/', authenticateToken, asyncHandler(async (req, res, next) => {
-    const { job_id, status, applied_at } = req.body;
+    const { job_id, status } = req.body;
     const user_id = req.user.user_id; // server-authoritative
 
     try {
@@ -21,8 +21,8 @@ router.post('/', authenticateToken, asyncHandler(async (req, res, next) => {
         }
 
         await db.promise().query(
-            'INSERT INTO applications (user_id, job_id, status, applied_at) VALUES (?, ?, ?, ?)',
-            [user_id, job_id, status, applied_at]
+            'INSERT INTO applications (user_id, job_id, status) VALUES (?, ?, ?)',
+            [user_id, job_id, status]
         );
         res.status(201).json({ message: 'Application submitted successfully!' });
     } catch (err) {
