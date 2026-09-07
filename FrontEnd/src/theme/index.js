@@ -74,15 +74,35 @@ const theme = createTheme({
                     borderRadius: 6,
                     textTransform: 'none',
                     fontWeight: 600,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)',
+                    },
+                    '&:active': {
+                        transform: 'translateY(0)',
+                    },
                 },
                 containedPrimary: {
                     backgroundColor: colors.primary,
-                    '&:hover': { backgroundColor: colors.primaryDark },
+                    '&:hover': {
+                        backgroundColor: colors.primaryDark,
+                        boxShadow: '0 4px 16px rgba(22, 163, 74, 0.4)',
+                    },
                 },
                 outlinedPrimary: {
                     borderColor: colors.primary,
                     color: colors.primaryDark,
-                    '&:hover': { borderColor: colors.primary, backgroundColor: colors.successBg },
+                    '&:hover': {
+                        borderColor: colors.primary,
+                        backgroundColor: colors.successBg,
+                        transform: 'translateY(-1px)',
+                    },
+                },
+                textPrimary: {
+                    '&:hover': {
+                        backgroundColor: 'rgba(22, 163, 74, 0.06)',
+                    },
                 },
             },
         },
@@ -93,6 +113,26 @@ const theme = createTheme({
                     backgroundColor: colors.surface,
                     borderRadius: 8,
                     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                    transition: 'all 0.25s ease-in-out',
+                    '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    },
+                },
+            },
+        },
+        // -- Icon Buttons ------------------------
+        MuiIconButton: {
+            styleOverrides: {
+                root: {
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.1)',
+                        backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                    },
+                    '&:active': {
+                        transform: 'scale(0.95)',
+                    },
                 },
             },
         },
@@ -101,14 +141,17 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     borderRadius: 6,
+                    transition: 'all 0.2s ease-in-out',
                     '& .MuiOutlinedInput-notchedOutline': {
                         borderColor: colors.inputBorder,
+                        transition: 'border-color 0.2s ease-in-out',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: colors.textSecondary,
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                         borderColor: colors.primary,
+                        boxShadow: `0 0 0 3px ${colors.primary}20`,
                     },
                 },
             },
@@ -142,6 +185,12 @@ const theme = createTheme({
                 root: {
                     backgroundColor: colors.successBg,
                     color: colors.successText,
+                    fontWeight: 500,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 2px 8px rgba(22, 163, 74, 0.2)',
+                    },
                 },
             },
         },

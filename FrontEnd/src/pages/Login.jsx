@@ -11,24 +11,60 @@ import {
     Alert,
     Paper,
     Container,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [touched, setTouched] = useState({ email: false, password: false });
+    const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const notify = useNotification();
     const navigate = useNavigate();
 
+    const validateEmail = (email) => {
+        if (!email) return 'Email is required';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email';
+        return '';
+    };
+
+    const validatePassword = (password) => {
+        if (!password) return 'Password is required';
+        if (password.length < 6) return 'Password must be at least 6 characters';
+        return '';
+    };
+
+    const errors = {
+        email: touched.email ? validateEmail(formData.email) : '',
+        password: touched.password ? validatePassword(formData.password) : '',
+    };
+
+    const isValid = !validateEmail(formData.email) && !validatePassword(formData.password);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, name: value });
+        setFormData({ ...formData, [name]: value });
         if (errorMessage) setErrorMessage('');
+    };
+
+    const handleBlur = (e) => {
+        const { name } = e.target;
+        setTouched({ ...touched, [name]: true });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setTouched({ email: true, password: true });
+        if (!isValid) {
+            notify.warning('Please fix the errors before submitting.');
+            return;
+        }
         setLoading(true);
         setErrorMessage('');
 
@@ -130,11 +166,19 @@ function Login() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.email && !!errors.email}
+                        helperText={touched.email && errors.email}
                         required
                         variant="outlined"
                         fullWidth
                         InputProps={{
-                            sx: { color: 'black' }
+                            sx: { color: 'black' },
+                            endAdornment: touched.email && !errors.email && (
+                                <InputAdornment position="end">
+                                    <CheckCircleIcon color="success" fontSize="small" />
+                                </InputAdornment>
+                            ),
                         }}
                         InputLabelProps={{
                             sx: { color: 'black' }
@@ -163,15 +207,32 @@ function Login() {
                     <TextField
                         id="password"
                         label="Password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.password && !!errors.password}
+                        helperText={touched.password && errors.password}
                         required
                         variant="outlined"
                         fullWidth
                         InputProps={{
-                            sx: { color: 'black' }
+                            sx: { color: 'black' },
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    {touched.password && !errors.password && (
+                                        <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
+                                    )}
+                                    <IconButton
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        edge="end"
+                                        size="small"
+                                    >
+                                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
                         }}
                         InputLabelProps={{
                             sx: { color: 'black' }
