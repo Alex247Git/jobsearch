@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../../services/socket';
 import {
@@ -15,6 +15,10 @@ import {
     useMediaQuery,
     IconButton,
     Tooltip,
+    Chip,
+    Avatar,
+    Stack,
+    Divider,
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -23,6 +27,9 @@ import StarIcon from '@mui/icons-material/Star';
 import MessageIcon from '@mui/icons-material/Message';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import WorkIcon from '@mui/icons-material/Work';
 import { apiFetch } from '../../api';
 import { useNotification } from '../../context/NotificationContext';
 import JobFilters from './JobFilters';
@@ -50,6 +57,19 @@ function Jobs({ user }) {
     const [companyRatings, setCompanyRatings] = useState([]);
     const [messageDialogOpen, setMessageDialogOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [sliderIndex, setSliderIndex] = useState(0);
+    const sliderRef = useRef(null);
+    const visibleItems = 3;
+
+    const scrollSlider = (direction) => {
+        if (!recommendedJobs.length) return;
+        const maxIndex = Math.max(0, recommendedJobs.length - visibleItems);
+        if (direction === 'left') {
+            setSliderIndex(prev => Math.max(0, prev - 1));
+        } else {
+            setSliderIndex(prev => Math.min(maxIndex, prev + 1));
+        }
+    };
 
 
     useEffect(() => {
@@ -314,114 +334,61 @@ function Jobs({ user }) {
                     </Typography>
 
                     {/* Job Listings */}
-                    {/* Recommended Jobs */}
+                    {/* Recommended Jobs Slider */}
                     {recommendedJobs.length > 0 && (
                         <Box sx={{ mb: 4 }}>
-                            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
-                                🔍 Recommended for You
-                            </Typography>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    gap: 2,
-                                    overflowX: 'auto',
-                                    pb: 2,
-                                    '&::-webkit-scrollbar': {
-                                        height: 6,
-                                    },
-                                    '&::-webkit-scrollbar-track': {
-                                        backgroundColor: '#f1f1f1',
-                                        borderRadius: 3,
-                                    },
-                                    '&::-webkit-scrollbar-thumb': {
-                                        backgroundColor: 'primary.main',
-                                        borderRadius: 3,
-                                    },
-                                }}
-                            >
-                                {recommendedJobs.map((job) => (
-                                    <Card
-                                        key={`recommended-${job.job_id}`}
-                                        sx={{
-                                            minWidth: 300,
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: theme.shadows[8],
-                                            },
-                                            border: '2px solid #ffc107',
-                                        }}
-                                        onClick={(e) => {
-                                            if (!e.target.closest("button")) {
-                                                navigate(`/job/${job.job_id}`);
-                                            }
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Typography variant="h6" sx={{ mb: 1, color: '#ffc107' }}>
-                                                {job.title} 🌟
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                                                🔢 Recommendation Score: {job.score ? `${Number(job.score).toFixed(2)} / 10` : "N/A"}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <BusinessIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.company_name}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                {renderStars(getCompanyRating(job.company_id))}
-                                                <Typography variant="body2" sx={{ ml: 1 }}>
-                                                    {getCompanyRating(job.company_id) ? `${getCompanyRating(job.company_id)} / 5` : 'No ratings yet'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <LocationOnIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">{job.location}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                                <AttachMoneyIcon sx={{ mr: 1, fontSize: 16 }} />
-                                                <Typography variant="body2">
-                                                    {job.salary?.toLocaleString() ? `$${job.salary.toLocaleString()}` : 'Not available'}
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Type:</strong> {job.job_type}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                                <strong>Remote:</strong> {job.remote_option === 1 ? 'Yes' : 'No'}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                                {job.description}
-                                            </Typography>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <WorkIcon color="primary" />
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                        🔍 Recommended for You
+                                    </Typography>
+                                    <Chip label={`${recommendedJobs.length} jobs`} size="small" color="primary" variant="outlined" />
+                                </Stack>
+                                {recommendedJobs.length > 3 && (
+                                    <Stack direction="row" spacing={1}>
+                                        <IconButton onClick={() => scrollSlider('left')} disabled={sliderIndex === 0} size="small"
+                                            sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
+                                            <ArrowBackIosNewIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton onClick={() => scrollSlider('right')} disabled={sliderIndex >= recommendedJobs.length - visibleItems} size="small"
+                                            sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
+                                            <ArrowForwardIosIcon fontSize="small" />
+                                        </IconButton>
+                                    </Stack>
+                                )}
+                            </Stack>
+                            <Box ref={sliderRef} sx={{ display: 'flex', gap: 2, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', pb: 1, '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none' }}>
+                                {recommendedJobs.slice(sliderIndex, sliderIndex + visibleItems).map((job) => (
+                                    <Card key={`rec-${job.job_id}`} sx={{ minWidth: { xs: '85vw', sm: '45vw', md: '32%' }, flexShrink: 0, scrollSnapAlign: 'start', cursor: 'pointer', border: 1, borderColor: 'divider' }} onClick={() => navigate(`/job/${job.job_id}`)}>
+                                        <CardContent sx={{ p: 2 }}>
+                                            <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mb: 1.5 }}>
+                                                <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>{job.company_name?.charAt(0)}</Avatar>
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="subtitle1" fontWeight="bold" noWrap>{job.title}</Typography>
+                                                    <Typography variant="body2" color="text.secondary" noWrap>{job.company_name}</Typography>
+                                                </Box>
+                                                <Chip label={`${((job.score || 0) * 10).toFixed(0)}% match`} size="small" color="success" sx={{ fontWeight: 600 }} />
+                                            </Stack>
+                                            <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                                    <LocationOnIcon fontSize="small" color="action" />
+                                                    <Typography variant="caption">{job.location}</Typography>
+                                                </Stack>
+                                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                                    <AttachMoneyIcon fontSize="small" color="action" />
+                                                    <Typography variant="caption">€{job.salary?.toLocaleString()}</Typography>
+                                                </Stack>
+                                            </Stack>
+                                            <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{job.description}</Typography>
                                         </CardContent>
-                                        <CardActions>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                fullWidth
-                                                onClick={() => handleApplication(job.job_id)}
-                                                disabled={appliedJobs.includes(job.job_id)}
-                                            >
-                                                {appliedJobs.includes(job.job_id) ? 'Applied ✅' : 'Apply Now'}
-                                            </Button>
-                                            <Tooltip title="Message Employer">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleSelectEmployer(job)}
-                                                >
-                                                    <MessageIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={savedJobs.includes(job.job_id) ? 'Saved' : 'Save Job'}>
-                                                <IconButton
-                                                    color={savedJobs.includes(job.job_id) ? 'secondary' : 'default'}
-                                                    onClick={() => handleSaveJob(job.job_id)}
-                                                    disabled={savedJobs.includes(job.job_id)}
-                                                >
-                                                    {savedJobs.includes(job.job_id) ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                                                </IconButton>
-                                            </Tooltip>
+                                        <Divider />
+                                        <CardActions sx={{ px: 2, py: 1, justifyContent: 'space-between' }}>
+                                            <Stack direction="row" spacing={1}>
+                                                <Chip label={job.job_type} size="small" variant="outlined" />
+                                                <Chip label={job.remote_option} size="small" variant="outlined" />
+                                            </Stack>
+                                            <Button size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleApplication(job.job_id); }}>Apply</Button>
                                         </CardActions>
                                     </Card>
                                 ))}
