@@ -18,6 +18,9 @@ router.post('/', authenticateToken, async (req, res) => {
             education || null, certifications || null, languages || null, social_links || null,
             cv || null, website || null
         ]);
+        // Trigger recommendation generation for this user
+        const recommendationService = require('../services/recommendationService');
+        recommendationService.generateForUser(user_id).catch(() => {});
         res.status(201).json({ message: 'Profile created successfully', profileId: result.insertId });
     } catch (err) {
         console.error('Error creating profile:', err.message);
@@ -85,6 +88,12 @@ router.put('/:userId', authenticateToken, authorizeSelf('userId'), async (req, r
             const query = `UPDATE users SET ${userFields.join(', ')} WHERE user_id = ?`;
             userValues.push(userId);
             await db.promise().query(query, userValues);
+        }
+
+        // Trigger recommendation regeneration if profile changed
+        if (profileFields.length > 0) {
+            const recommendationService = require('../services/recommendationService');
+            recommendationService.generateForUser(userId).catch(() => {});
         }
 
         res.status(200).json({ message: 'Profile updated successfully' });

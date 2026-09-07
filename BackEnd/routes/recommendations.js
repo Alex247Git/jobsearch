@@ -115,4 +115,24 @@ router.delete("/:recommendation_id", authenticateToken, async (req, res) => {
     }
 });
 
+// ✅ POST - Trigger recommendation generation (manual)
+router.post("/generate", authenticateToken, async (req, res) => {
+    const recommendationService = require('../services/recommendationService');
+    const { type } = req.body; // 'job', 'candidate', or 'all'
+    
+    // Return immediately, process in background
+    res.json({ message: "Recommendation generation started", status: "running" });
+    
+    // Run in background (don't await)
+    recommendationService.generateForAll().catch(err => {
+        console.error("Manual recommendation generation failed:", err);
+    });
+});
+
+// ✅ GET - Check generation status
+router.get("/status", authenticateToken, async (req, res) => {
+    const recommendationService = require('../services/recommendationService');
+    res.json(recommendationService.getStatus());
+});
+
 module.exports = router;

@@ -1,28 +1,25 @@
-import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import {
-    Box, Container, Typography, Link, Stack, Divider, IconButton, Tooltip,
-} from '@mui/material';
-import WorkIcon from '@mui/icons-material/Work';
+import EmailIcon from '@mui/icons-material/Email';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import WorkIcon from '@mui/icons-material/Work';
+import {
+    Box, Container,
+    Divider, IconButton,
+    Link, Stack,
+    Tooltip,
+    Typography,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 
 const QUICK_LINKS = [
     { label: 'Home', to: '/' },
     { label: 'Jobs', to: '/Jobs' },
-    { label: 'Companies', to: '/Companies' },
-    { label: 'About', to: '/about' },
-    { label: 'Contact', to: '/contact' },
-    { label: 'Privacy', to: '/privacy' },
 ];
 
 const SOCIAL = [
     { icon: <GitHubIcon fontSize="small" />, label: 'GitHub', href: 'https://github.com' },
     { icon: <LinkedInIcon fontSize="small" />, label: 'LinkedIn', href: 'https://linkedin.com' },
-    { icon: <TwitterIcon fontSize="small" />, label: 'Twitter', href: 'https://twitter.com' },
 ];
 
 function Footer() {
@@ -116,7 +113,7 @@ function Footer() {
                             <Stack direction="row" spacing={1} alignItems="flex-start">
                                 <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary', mt: 0.4 }} />
                                 <Typography variant="body2" color="text.secondary">
-                                    Athens, Greece
+                                    Greece
                                 </Typography>
                             </Stack>
                         </Stack>

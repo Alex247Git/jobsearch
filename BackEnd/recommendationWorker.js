@@ -50,6 +50,10 @@ async function generateCandidateRecommendations() {
         const [candidates] = await db.promise().query(`
             SELECT c.user_id AS candidate_id, p.location, p.education, p.languages, p.certifications
             FROM candidates c JOIN profiles p ON c.user_id = p.user_id`);
+        if (candidates.length === 0) {
+            console.log("No candidates with profiles found.");
+            return;
+        }
         const resumeInputs = candidates.map(c => ({
             education: c.education, languages: c.languages, certifications: c.certifications, location: c.location
         }));

@@ -84,6 +84,9 @@ app.use(errorHandler);
 if (require.main === module) {
     server.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
+        // Start recommendation generation in background
+        const recommendationService = require('./services/recommendationService');
+        recommendationService.initRecommendations();
     });
 }
 
