@@ -16,7 +16,7 @@ function JobCard({
 }) {
     const theme = useTheme();
     return (
-<Grid item xs={12} sm={6} md={4} key={`job-${job.job_id}`}>
+<Grid size={{ xs: 12, sm: 6, md: 4 }} key={`job-${job.job_id}`}>
     <Card
         sx={{
             height: '100%',

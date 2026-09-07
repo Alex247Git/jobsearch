@@ -85,7 +85,7 @@ function Home() {
                             </Typography>
 
                             <Grid container spacing={4} justifyContent="center">
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -130,7 +130,7 @@ function Home() {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -175,7 +175,7 @@ function Home() {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -237,7 +237,7 @@ function Home() {
                             </Typography>
 
                             <Grid container spacing={4} justifyContent="center">
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -282,7 +282,7 @@ function Home() {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -327,7 +327,7 @@ function Home() {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -389,7 +389,7 @@ function Home() {
                             </Typography>
 
                             <Grid container spacing={4} justifyContent="center">
-                                <Grid item xs={12} md={6} lg={4}>
+                                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                                     <Card
                                         sx={{
                                             height: '100%',
