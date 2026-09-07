@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import { AuthContext, AuthProvider } from './context/AuthContext';
 import './App.css';
 import Header from './components/Header';
@@ -87,29 +87,9 @@ return (
     );
 }
 
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#b4f000', // greenyellow equivalent
-        },
-        secondary: {
-            main: '#282c34', // dark background
-        },
-        background: {
-            default: '#282c34',
-            paper: '#282c34',
-        },
-        text: {
-            primary: '#ffffff',
-            secondary: '#b4f000',
-        },
-    },
-    typography: {
-        h1: {
-            fontSize: '2rem',
-        },
-    },
-});
+// Design tokens live in ./theme — single source of truth for colors,
+// typography, shape and component overrides.
+import theme from './theme';
 
 function App() {
     return (

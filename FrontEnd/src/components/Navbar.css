@@ -25,7 +25,7 @@
 }
 
 .navbar-links a:hover {
-    color: greenyellow;
+    color: #16A34A;
 }
 
 .navbar-auth-buttons {
@@ -52,21 +52,21 @@
 }
 
 .navbar-register-btn {
-    background-color: greenyellow;
+    background-color: #16A34A;
     color: black;
 }
 
 .navbar-register-btn:hover {
-    background-color: #b4f000;
+    background-color: #16A34A;
 }
 
 .navbar-login-btn {
-    background-color: greenyellow;
+    background-color: #16A34A;
     color: black;
 }
 
 .navbar-login-btn:hover {
-    background-color: #b4f000;
+    background-color: #16A34A;
 }
 
 .navbar-user-menu {
@@ -89,7 +89,7 @@
 }
 
 .navbar-user-name-btn:hover {
-    color: greenyellow;
+    color: #16A34A;
 }
 
 .navbar-dropdown-menu {

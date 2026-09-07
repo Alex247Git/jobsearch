@@ -48,7 +48,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #007bff;
+    background: #16A34A;
     color: white;
     display: flex;
     align-items: center;
@@ -92,7 +92,7 @@
 
 .sent {
     align-self: flex-end;
-    background-color: #DCF8C6;
+    background-color: #DCFCE7;
     text-align: right;
 }
 
@@ -120,7 +120,7 @@ input {
 button {
     padding: 10px 15px;
     border: none;
-    background: #007bff;
+    background: #16A34A;
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -128,7 +128,7 @@ button {
 }
 
 button:hover {
-    background: #0056b3;
+    background: #15803D;
 }
 
 .select-chat {

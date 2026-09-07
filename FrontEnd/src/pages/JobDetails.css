@@ -38,7 +38,7 @@ h1 {
 }
 
 .apply-button {
-    background-color: #007bff;
+    background-color: #16A34A;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -48,11 +48,11 @@ h1 {
 }
 
 .apply-button:hover {
-    background-color: #0056b3;
+    background-color: #15803D;
 }
 
 .save-btn {
-    background-color: #FF6347;
+    background-color: #EF4444;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -61,11 +61,11 @@ h1 {
 }
 
 .save-btn:hover {
-    background-color: #FF4500;
+    background-color: #DC2626;
 }
 
 .message-btn {
-    background-color: #28a745;
+    background-color: #16A34A;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -74,7 +74,7 @@ h1 {
 }
 
 .message-btn:hover {
-    background-color: #218838;
+    background-color: #15803D;
 }
 
 .profile-links {
@@ -86,7 +86,7 @@ h1 {
 
 .profile-links a {
     text-decoration: none;
-    color: #007bff;
+    color: #16A34A;
     font-weight: bold;
 }
 

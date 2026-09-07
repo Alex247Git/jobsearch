@@ -71,7 +71,7 @@ h1 {
 }
 
 .apply-button {
-    background-color: #007bff;
+    background-color: #16A34A;
     color: white;
     padding: 8px 12px;
     border: none;
@@ -86,7 +86,7 @@ h1 {
 }
 
 .save-btn {
-    background-color: #007bff; 
+    background-color: #16A34A; 
     color: white;
     padding: 8px 12px;
     border: none;
@@ -96,12 +96,12 @@ h1 {
 }
 
 .save-btn:hover {
-    background-color: #0056b3;
+    background-color: #15803D;
 }
 
 
 .message-btn {
-    background-color: #28a745;
+    background-color: #16A34A;
     color: white;
     border: none;
 
@@ -110,7 +110,7 @@ h1 {
 }
 
 .message-btn:hover {
-    background-color: #218838;
+    background-color: #15803D;
 }
 
 .message-modal {
@@ -297,7 +297,7 @@ h1 {
 .score-value {
     font-weight: bold;
     color: #000;
-    background: greenyellow;
+    background: #16A34A;
     padding: 4px 8px;
     border-radius: 5px;
 }
