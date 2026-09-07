@@ -6,8 +6,10 @@ function Footer() {
     <Box
       component="footer"
       sx={{
-        backgroundColor: 'secondary.main',
+        backgroundColor: 'background.paper',
         color: 'text.primary',
+        borderTop: '1px solid',
+        borderColor: 'divider',
         py: 3,
         mt: 'auto',
         width: '100%',
@@ -73,7 +75,7 @@ function Footer() {
           </Box>
         </Box>
 
-        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.12)', mb: 2 }} />
+        <Divider sx={{ borderColor: 'divider', mb: 2 }} />
 
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <Typography
