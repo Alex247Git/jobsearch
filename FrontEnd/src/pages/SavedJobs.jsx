@@ -1,85 +1,71 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import './SavedJobs.css'; 
+import { useNavigate } from 'react-router-dom';
+import {
+    Container, Box, Paper, Stack, Typography, Button, Card, CardContent, CardActions,
+    CircularProgress, Alert,
+} from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../api';
 
 function SavedJobs({ user }) {
     const [savedJobs, setSavedJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const user_id = user?.user_id;
-    const navigate = useNavigate(); 
 
     useEffect(() => {
-        if (!user_id) {
-            console.error('User ID is undefined. Cannot fetch saved jobs.');
-            return;
-        }
+        if (!user_id) { setLoading(false); return; }
         apiFetch(`/saved_jobs/${user_id}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch saved jobs');
-                }
-                return response.json();
-            })
-            .then((data) => setSavedJobs(data))
-            .catch((error) => console.error('Error fetching saved jobs:', error));
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(d => { setSavedJobs(d); setLoading(false); })
+            .catch(() => setLoading(false));
     }, [user_id]);
 
     const handleRemoveJob = (jobId) => {
-        if (!user_id) {
-            console.error('User ID is undefined. Cannot remove saved job.');
-            return;
-        }
-        apiFetch(`/saved_jobs/${user_id}/${jobId}`, {
-            method: 'DELETE',
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to remove saved job');
-                }
-                return response.json();
-            })
-            .then(() => {
-                alert('Job removed successfully!');
-                setSavedJobs(savedJobs.filter((job) => job.job_id !== jobId));
-            })
-            .catch((error) => console.error('Error removing job:', error));
+        apiFetch(`/saved_jobs/${user_id}/${jobId}`, { method: 'DELETE' })
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(() => setSavedJobs(s => s.filter(j => j.job_id !== jobId)))
+            .catch(err => console.error(err));
     };
 
-    const handleJobClick = (jobId) => {
-        navigate(`/job/${jobId}`); 
-    };
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    if (!user_id) return <Container sx={{ mt: 4 }}><Alert severity="warning">Please log in.</Alert></Container>;
+    if (savedJobs.length === 0) return <Container sx={{ mt: 4 }}><Alert severity="info">You have no saved jobs.</Alert></Container>;
 
     return (
-        <div className="saved-jobs-container">
-            <h1>Your Saved Jobs</h1>
-            <div className="saved-job-listings">
-                {savedJobs.map((job) => (
-                    <div
-                        key={job.job_id}
-                        className="saved-job-card"
-                        onClick={() => handleJobClick(job.job_id)}
-                        style={{ cursor: 'pointer' }} 
-                    >
-                        <h2>{job.title}</h2>
-                        <p><strong>Company:</strong> {job.company_name}</p>
-                        <p><strong>Location:</strong> {job.location}</p>
-                        <p><strong>Type:</strong> {job.job_type}</p>
-                        <p><strong>Remote Option:</strong> {job.remote_option}</p>
-                        <p><strong>Salary:</strong> ${job.salary.toLocaleString()}</p>
-                        <p><strong>Description:</strong> {job.description}</p>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveJob(job.job_id);
-                            }}
-                            className="saved-remove-button"
-                        >
-                            Remove Job
-                        </button>
-                    </div>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Typography variant="h4" sx={{ mb: 4 }}>Your Saved Jobs</Typography>
+            <Stack spacing={2}>
+                {savedJobs.map(job => (
+                    <Card key={job.job_id} sx={{ cursor: 'pointer' }} onClick={() => navigate(`/job/${job.job_id}`)}>
+                        <CardContent>
+                            <Typography variant="h6">{job.title}</Typography>
+                            <Typography color="text.secondary" sx={{ mb: 1 }}>{job.company_name}</Typography>
+                            <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <LocationOnIcon fontSize="small" color="action" />
+                                    <Typography variant="body2">{job.location}</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <AttachMoneyIcon fontSize="small" color="action" />
+                                    <Typography variant="body2">${job.salary?.toLocaleString()}</Typography>
+                                </Stack>
+                                <Typography variant="body2">• {job.job_type} • {job.remote_option}</Typography>
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary">{job.description?.slice(0, 120)}...</Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button size="small" color="error" startIcon={<DeleteIcon />}
+                                onClick={(e) => { e.stopPropagation(); handleRemoveJob(job.job_id); }}>
+                                Remove
+                            </Button>
+                        </CardActions>
+                    </Card>
                 ))}
-            </div>
-        </div>
+            </Stack>
+        </Container>
     );
 }
 

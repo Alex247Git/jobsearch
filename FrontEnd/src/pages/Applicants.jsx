@@ -1,190 +1,133 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../services/socket';
-import './Applicants.css';
+import {
+    Container, Box, Paper, Stack, Typography, Button, Card, CardContent, CardActions,
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert,
+    CircularProgress, Chip, IconButton,
+} from '@mui/material';
+import EmailIcon from '@mui/icons-material/Email';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
 import { apiFetch } from '../api';
 
 function Applicants({ user }) {
     const [applicants, setApplicants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
-    const [selectedCandidateName, setSelectedCandidateName] = useState("");
-    const [messageText, setMessageText] = useState("");
-    const [acceptingApplicant, setAcceptingApplicant] = useState(null);
-    const [decliningApplicant, setDecliningApplicant] = useState(null);
-
-
+    const [selectedCandidateName, setSelectedCandidateName] = useState('');
+    const [messageText, setMessageText] = useState('');
+    const [accepting, setAccepting] = useState(null);
+    const [declining, setDeclining] = useState(null);
     const navigate = useNavigate();
     const user_id = user?.user_id;
 
     useEffect(() => {
-        if (!user_id) return;
+        if (!user_id) { setLoading(false); return; }
         apiFetch(`/applications/employer/${user_id}`)
-            .then((res) => res.json())
-            .then((data) => {
-                const pendingApplications = data.filter(app => app.application_status !== 'accepted');
-                setApplicants(pendingApplications);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error fetching applicants:", err);
-                setLoading(false);
-            });
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(d => { setApplicants(d.filter(a => a.application_status !== 'accepted')); setLoading(false); })
+            .catch(() => setLoading(false));
     }, [user_id]);
 
-
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (!user_id || !selectedCandidate || !messageText.trim()) return;
-
-        const messageData = {
-            sender_id: user_id,
-            receiver_id: selectedCandidate,
-            message: messageText.trim(),
-        };
-
-        apiFetch(`/messages`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(messageData),
-        })
-            .then((res) => res.json())
-            .then((newMessage) => {
-                if (newMessage.message_id) {
-                    socket.emit("sendMessage", newMessage);
-                    alert("Message sent!");
-                    setMessageText("");
-                    setSelectedCandidate(null);
-                }
-            })
-            .catch((err) => console.error("Error sending message:", err));
-    };
-
-    const handleAcceptApplicant = async (application_id) => {
-        setAcceptingApplicant(application_id);
         try {
-            const res = await apiFetch(`/applications/application/${application_id}`, {
-                method: 'PUT',
+            const res = await apiFetch('/messages', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sender_id: user_id, receiver_id: selectedCandidate, message: messageText.trim() }),
             });
-            if (!res.ok) throw new Error("Failed to accept applicant");
-            const data = await res.json();
-
-            setApplicants((prev) =>
-                prev.map((a) =>
-                    a.application_id === application_id
-                        ? { ...a, application_status: 'accepted' }
-                        : a
-                )
-            );
-
-            alert(data.message || "Applicant accepted.");
-        } catch (error) {
-            console.error("Accept error:", error);
-            alert("Could not accept applicant.");
-        } finally {
-            setAcceptingApplicant(null);
-        }
+            const newMessage = await res.json();
+            if (newMessage.message_id) {
+                socket.emit('sendMessage', newMessage);
+                setMessageText(''); setSelectedCandidate(null);
+            }
+        } catch (err) { console.error(err); }
     };
 
-    const handleDeclineApplicant = async (application_id) => {
-        setDecliningApplicant(application_id);
+    const handleAction = async (application_id, action) => {
+        const status = action === 'accept' ? 'accepted' : 'declined';
+        if (action === 'accept') setAccepting(application_id); else setDeclining(application_id);
         try {
-            const res = await apiFetch(`/applications/application/${application_id}`, {
-                method: 'PUT',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: "declined" })
+            await apiFetch(`/applications/application/${application_id}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
             });
-            if (!res.ok) throw new Error("Failed to decline applicant");
-            const data = await res.json();
-
-            setApplicants((prev) =>
-                prev.map((a) =>
-                    a.application_id === application_id
-                        ? { ...a, application_status: 'declined' }
-                        : a
-                )
-            );
-
-            alert(data.message || "Applicant declined.");
-        } catch (error) {
-            console.error("Decline error:", error);
-            alert("Could not decline applicant.");
-        } finally {
-            setDecliningApplicant(null);
-        }
+            setApplicants(prev => prev.map(a => a.application_id === application_id ? { ...a, application_status: status } : a));
+        } catch (err) { console.error(err); }
+        finally { action === 'accept' ? setAccepting(null) : setDeclining(null); }
     };
 
-    if (!user_id) return <p>Please log in to view applicants.</p>;
-
-    if (loading) return <div className="spinner">Loading applicants...</div>;
+    if (!user_id) return <Container sx={{ mt: 4 }}><Alert severity="warning">Please log in.</Alert></Container>;
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
 
     return (
-        <div className="applicants-container">
-            <h1>Applicants for Your Jobs</h1>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Typography variant="h4" sx={{ mb: 4 }}>Applicants</Typography>
             {applicants.length === 0 ? (
-                <p>No applicants found.</p>
+                <Alert severity="info">No pending applicants.</Alert>
             ) : (
-                <div className="applicant-list">
-                    {applicants.map((a) => (
-                        <div key={a.application_id} className="applicant-card">
-                            <h3>{a.candidate_first_name} {a.candidate_last_name}</h3>
-                            <p><strong>Email:</strong> {a.candidate_email}</p>
-                            <p><strong>Job:</strong> {a.job_title}</p>
-                            <p><strong>Status:</strong> {a.application_status}</p>
-                            <p><strong>Applied:</strong> {new Date(a.application_date).toLocaleString()}</p>
-                            <div className="button-group">
-                                <button onClick={() => navigate(`/Profile/${a.candidate_id}`)}>View Profile</button>
-                                <button
+                <Stack spacing={2}>
+                    {applicants.map(a => (
+                        <Card key={a.application_id}>
+                            <CardContent>
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                    <Box>
+                                        <Typography variant="h6">{a.candidate_first_name} {a.candidate_last_name}</Typography>
+                                        <Typography variant="body2" color="text.secondary">{a.candidate_email}</Typography>
+                                    </Box>
+                                    <Chip label={a.application_status} size="small" color={a.application_status === 'declined' ? 'error' : 'default'} />
+                                </Stack>
+                                <Typography variant="body2" sx={{ mt: 1 }}>Applied for: <strong>{a.job_title}</strong></Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {new Date(a.application_date).toLocaleString()}
+                                </Typography>
+                            </CardContent>
+                            <CardActions sx={{ gap: 1, flexWrap: 'wrap' }}>
+                                <Button size="small" onClick={() => navigate(`/Profile/${a.candidate_id}`)}>View Profile</Button>
+                                <Button size="small" startIcon={<EmailIcon />}
                                     onClick={() => {
                                         setSelectedCandidate(a.candidate_id);
                                         setSelectedCandidateName(`${a.candidate_first_name} ${a.candidate_last_name}`);
-                                        setMessageText("");
-                                    }}
-                                >
-                                    ✉️ Message
-                                </button>
-                                {a.application_status?.toLowerCase().trim() !== "accepted" && (
-                                    <button
-                                        onClick={() => handleAcceptApplicant(a.application_id)}
-                                        disabled={acceptingApplicant === a.application_id}
-                                    >
-                                        {acceptingApplicant === a.application_id ? "Accepting..." : "Accept"}
-                                    </button>
+                                        setMessageText('');
+                                    }}>Message</Button>
+                                {a.application_status !== 'accepted' && (
+                                    <Button size="small" color="success" variant="contained" disabled={accepting === a.application_id}
+                                        onClick={() => handleAction(a.application_id, 'accept')}>
+                                        {accepting === a.application_id ? 'Accepting...' : 'Accept'}
+                                    </Button>
                                 )}
-                                {a.application_status?.toLowerCase().trim() !== "declined" && (
-                                    <button
-                                        onClick={() => handleDeclineApplicant(a.application_id)}
-                                        disabled={decliningApplicant === a.application_id}
-                                    >
-                                        {decliningApplicant === a.application_id ? "Declining..." : "Decline"}
-                                    </button>
+                                {a.application_status !== 'declined' && (
+                                    <Button size="small" color="error" variant="outlined" disabled={declining === a.application_id}
+                                        onClick={() => handleAction(a.application_id, 'decline')}>
+                                        {declining === a.application_id ? 'Declining...' : 'Decline'}
+                                    </Button>
                                 )}
-                            </div>
-                        </div>
+                            </CardActions>
+                        </Card>
                     ))}
-                </div>
+                </Stack>
             )}
 
-            {selectedCandidate && (
-                <div className="message-modal">
-                    <div className="modal-content">
-                        <h3>Send message to {selectedCandidateName}</h3>
-                        <textarea
-                            value={messageText}
-                            onChange={(e) => setMessageText(e.target.value)}
-                            placeholder="Type a message..."
-                        />
-                        {!messageText.trim() && <p className="error-message">Message cannot be empty</p>}
-                        <button
-                            onClick={handleSendMessage}
-                            disabled={!messageText.trim()}
-                        >
-                            Send
-                        </button>
-                        <button onClick={() => setSelectedCandidate(null)}>Close</button>
-                    </div>
-                </div>
-            )}
-        </div>
+            <Dialog open={!!selectedCandidate} onClose={() => setSelectedCandidate(null)} fullWidth maxWidth="sm">
+                <DialogTitle>
+                    Message to {selectedCandidateName}
+                    <IconButton onClick={() => setSelectedCandidate(null)} sx={{ position: 'absolute', right: 8, top: 8 }}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField fullWidth multiline rows={4} value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)} placeholder="Type a message..." autoFocus />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSelectedCandidate(null)}>Cancel</Button>
+                    <Button variant="contained" startIcon={<SendIcon />} onClick={handleSendMessage} disabled={!messageText.trim()}>
+                        Send
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Container>
     );
 }
 
