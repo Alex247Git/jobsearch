@@ -336,8 +336,8 @@ function Jobs({ user }) {
                     {/* Job Listings */}
                     {/* Recommended Jobs Slider */}
                     {recommendedJobs.length > 0 && (
-                        <Box sx={{ mb: 4 }}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                        <Box sx={{ mb: 5 }}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
                                 <Stack direction="row" alignItems="center" spacing={1}>
                                     <WorkIcon color="primary" />
                                     <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
@@ -345,54 +345,38 @@ function Jobs({ user }) {
                                     </Typography>
                                     <Chip label={`${recommendedJobs.length} jobs`} size="small" color="primary" variant="outlined" />
                                 </Stack>
-                                {recommendedJobs.length > 3 && (
+                                {recommendedJobs.length > 1 && (
                                     <Stack direction="row" spacing={1}>
                                         <IconButton onClick={() => scrollSlider('left')} disabled={sliderIndex === 0} size="small"
                                             sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
                                             <ArrowBackIosNewIcon fontSize="small" />
                                         </IconButton>
-                                        <IconButton onClick={() => scrollSlider('right')} disabled={sliderIndex >= recommendedJobs.length - visibleItems} size="small"
+                                        <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center', minWidth: 40, textAlign: 'center' }}>
+                                            {sliderIndex + 1}-{Math.min(sliderIndex + visibleItems, recommendedJobs.length)} / {recommendedJobs.length}
+                                        </Typography>
+                                        <IconButton onClick={() => scrollSlider('right')} disabled={sliderIndex >= recommendedJobs.length - 1} size="small"
                                             sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.3 } }}>
                                             <ArrowForwardIosIcon fontSize="small" />
                                         </IconButton>
                                     </Stack>
                                 )}
                             </Stack>
-                            <Box ref={sliderRef} sx={{ display: 'flex', gap: 2, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', pb: 1, '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none' }}>
+                            <Grid container spacing={3}>
                                 {recommendedJobs.slice(sliderIndex, sliderIndex + visibleItems).map((job) => (
-                                    <Card key={`rec-${job.job_id}`} sx={{ minWidth: { xs: '85vw', sm: '45vw', md: '32%' }, flexShrink: 0, scrollSnapAlign: 'start', cursor: 'pointer', border: 1, borderColor: 'divider' }} onClick={() => navigate(`/job/${job.job_id}`)}>
-                                        <CardContent sx={{ p: 2 }}>
-                                            <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mb: 1.5 }}>
-                                                <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>{job.company_name?.charAt(0)}</Avatar>
-                                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                    <Typography variant="subtitle1" fontWeight="bold" noWrap>{job.title}</Typography>
-                                                    <Typography variant="body2" color="text.secondary" noWrap>{job.company_name}</Typography>
-                                                </Box>
-                                                <Chip label={`${((job.score || 0) * 10).toFixed(0)}% match`} size="small" color="success" sx={{ fontWeight: 600 }} />
-                                            </Stack>
-                                            <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <LocationOnIcon fontSize="small" color="action" />
-                                                    <Typography variant="caption">{job.location}</Typography>
-                                                </Stack>
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <AttachMoneyIcon fontSize="small" color="action" />
-                                                    <Typography variant="caption">€{job.salary?.toLocaleString()}</Typography>
-                                                </Stack>
-                                            </Stack>
-                                            <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{job.description}</Typography>
-                                        </CardContent>
-                                        <Divider />
-                                        <CardActions sx={{ px: 2, py: 1, justifyContent: 'space-between' }}>
-                                            <Stack direction="row" spacing={1}>
-                                                <Chip label={job.job_type} size="small" variant="outlined" />
-                                                <Chip label={job.remote_option} size="small" variant="outlined" />
-                                            </Stack>
-                                            <Button size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleApplication(job.job_id); }}>Apply</Button>
-                                        </CardActions>
-                                    </Card>
+                                    <JobCard
+                                        key={`rec-${job.job_id}`}
+                                        job={job}
+                                        saved={savedJobs.includes(job.job_id)}
+                                        applied={appliedJobs.includes(job.job_id)}
+                                        rating={getCompanyRating(job.company_id)}
+                                        renderStars={renderStars}
+                                        onOpen={(jobId) => navigate(`/job/${jobId}`)}
+                                        onApply={handleApplication}
+                                        onMessage={handleSelectEmployer}
+                                        onSave={handleSaveJob}
+                                    />
                                 ))}
-                            </Box>
+                            </Grid>
                         </Box>
                     )}
 
