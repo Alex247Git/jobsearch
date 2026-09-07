@@ -13,41 +13,76 @@ function Messages({ user }) {
     const [message, setMessage] = useState('');
     const messagesEndRef = useRef(null);
 
+    // Normalize to string once - JWT payload comes as number from API,
+    // but the same id can come back as either type from different paths
+    // (localStorage, JWT decode, route params). Comparing strings avoids
+    // subtle "all messages look like theirs" bugs.
+    const meId = user?.user_id != null ? String(user.user_id) : null;
+
+    // Fetch conversations only when the logged-in user changes.
     useEffect(() => {
-        if (!user?.user_id) return;
-        connectSocket(user.user_id);
-        apiFetch(`/messages/conversations/${user.user_id}`)
-            .then(res => res.json()).then(setConversations)
-            .catch(err => console.error(err));
+        if (!meId) return;
+        connectSocket(meId);
+        apiFetch(`/messages/conversations/${meId}`)
+            .then(res => res.json())
+            .then(data => setConversations(Array.isArray(data) ? data : []))
+            .catch(err => console.error('Error fetching conversations:', err));
+        return () => disconnectSocket();
+    }, [meId]);
+
+    // Listen for incoming socket messages. Only push if it belongs to
+    // the currently open conversation. We track by string id to avoid
+    // type-mismatch edge cases.
+    useEffect(() => {
         const handle = (data) => {
-            if (selectedUser && (data.sender_id === selectedUser.user_id || data.receiver_id === selectedUser.user_id)) {
-                setMessages(p => [...p, data]);
+            const sid = data.sender_id != null ? String(data.sender_id) : null;
+            const rid = data.receiver_id != null ? String(data.receiver_id) : null;
+            if (!selectedUser) return;
+            const otherId = String(selectedUser.user_id);
+            if (sid === otherId || rid === otherId) {
+                setMessages(prev => {
+                    // de-dupe in case socket + local echo deliver the same row
+                    if (prev.some(m => m.message_id && m.message_id === data.message_id)) return prev;
+                    return [...prev, data];
+                });
             }
         };
         socket.on('receiveMessage', handle);
-        return () => { socket.off('receiveMessage', handle); disconnectSocket(); };
-    }, [user?.user_id, selectedUser?.user_id]);
+        return () => socket.off('receiveMessage', handle);
+    }, [selectedUser?.user_id]);
 
     const loadMessages = (conv) => {
         setSelectedUser(conv);
-        apiFetch(`/messages/${user.user_id}/${conv.user_id}`)
-            .then(res => res.json()).then(d => { setMessages(d); setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50); });
+        if (!meId) return;
+        apiFetch(`/messages/${meId}/${conv.user_id}`)
+            .then(res => res.json())
+            .then(d => { setMessages(Array.isArray(d) ? d : []); setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50); })
+            .catch(err => console.error('Error fetching messages:', err));
     };
 
     const sendMessage = () => {
-        if (!message.trim() || !selectedUser) return;
+        if (!message.trim() || !selectedUser || !meId) return;
+        const payload = {
+            sender_id: meId,
+            receiver_id: selectedUser.user_id,
+            message,
+        };
         apiFetch('/messages', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sender_id: user.user_id, receiver_id: selectedUser.user_id, message }),
+            body: JSON.stringify(payload),
         })
         .then(r => r.json())
         .then(saved => {
-            setMessages(p => [...p, {
+            const newMessage = {
                 message_id: saved.messageId || saved.message_id,
-                sender_id: user.user_id, receiver_id: selectedUser.user_id, message, created_at: new Date().toISOString(),
-            }]);
+                sender_id: Number(meId),
+                receiver_id: selectedUser.user_id,
+                message,
+                created_at: new Date().toISOString(),
+            };
+            setMessages(p => [...p, newMessage]);
             setMessage('');
-            socket.emit('sendMessage', saved);
+            socket.emit('sendMessage', newMessage);
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
         });
     };
@@ -62,7 +97,8 @@ function Messages({ user }) {
                             No conversations yet
                         </Typography>
                     ) : conversations.map(conv => {
-                        const isActive = selectedUser?.user_id === conv.user_id;
+                        const convId = String(conv.user_id);
+                        const isActive = selectedUser && String(selectedUser.user_id) === convId;
                         return (
                             <Stack key={conv.user_id} direction="row" spacing={1.5} alignItems="center"
                                 onClick={() => loadMessages(conv)}
@@ -92,7 +128,8 @@ function Messages({ user }) {
                         </Box>
                         <Box sx={{ flex: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {messages.map((m, i) => {
-                                const mine = m.sender_id === user.user_id;
+                                // String compare to avoid number/string mismatch
+                                const mine = m.sender_id != null && String(m.sender_id) === meId;
                                 return (
                                     <Box key={m.message_id || i} sx={{
                                         alignSelf: mine ? 'flex-end' : 'flex-start',
