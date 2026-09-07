@@ -7,7 +7,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
 [![CI Status](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
 [![Backend Audit](https://img.shields.io/badge/Backend_Audit-0_vulns-brightgreen.svg)]()
-[![Frontend Audit](https://img.shields.io/badge/Frontend_Audit-2_moderate-yellow.svg)]()
+[![Frontend Audit](https://img.shields.io/badge/Frontend_Audit-0_vulns-brightgreen.svg)]()
 [![Backend Tests](https://img.shields.io/badge/Tests-23%2F23-brightgreen.svg)]()
 [![Frontend Tests](https://img.shields.io/badge/Tests-7%2F7-brightgreen.svg)]()
 
@@ -33,7 +33,7 @@ What makes it stand out from a typical tutorial project:
 | 🔐 **Production-grade security** | JWT auth, role-based + resource-based authorization, rate limiting, helmet, audit log |
 | 🧪 **Real tests** | 23 backend (jest, mocked DB) + 7 frontend (vitest) — not boilerplate |
 | 🏗️ **CI/CD** | GitHub Actions: backend tests + frontend tests + production build on every push |
-| 📦 **Clean deps** | 0 critical/high npm audit vulnerabilities, all transitive pinned via overrides |
+| 📦 **Clean deps** | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides |
 | 🏎️ **Modern stack** | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express |
 
 ---
@@ -246,7 +246,7 @@ Smoke-tested: a frontend resume scores **6.2** vs **0** for an unrelated account
 | Mass assignment | ✅ Role/verification not user-updatable |
 | Secret leak | ✅ `.env` gitignored, fail-fast on startup |
 | CSRF | ✅ N/A (token in header, not cookie) |
-| npm audit | ✅ Backend 0, frontend 2 moderate (react-router v6 SSR) |
+| npm audit | ✅ Backend 0, frontend 0 (pinned to react-router-dom 6.30.3-pre-v6.0) |
 
 ---
 
