@@ -12,7 +12,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
-        const query = `INSERT INTO employers (user_id, company_id, job_id) VALUES (?, ?, ?, ?)`;
+        const query = `INSERT INTO employers (user_id, company_id, job_id) VALUES (?, ?, ?)`;
         const [result] = await db.promise().query(query, [user_id, company_id, job_id]);
         res.status(201).json({ message: 'Employer created successfully', employerId: result.insertId });
     } catch (err) {

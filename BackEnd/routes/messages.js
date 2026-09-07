@@ -103,7 +103,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
     }
 
     try {
-        const query = `UPDATE messages SET message_content = ? WHERE message_id = ?`;
+        const query = `UPDATE messages SET message = ? WHERE message_id = ?`;
         const [result] = await db.promise().query(query, [message_content, messageId]);
 
         if (result.affectedRows === 0) {
