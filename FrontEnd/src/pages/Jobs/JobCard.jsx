@@ -14,6 +14,7 @@ function JobCard({
     job, saved, applied, rating, renderStars,
     onOpen, onApply, onMessage, onSave,
     recommended = false,
+    score = null,
 }) {
     const theme = useTheme();
     return (
@@ -60,6 +61,24 @@ function JobCard({
                 boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
             }}>
                 RECOMMENDED
+            </Box>
+        )}
+        {recommended && score != null && (
+            <Box sx={{
+                position: 'absolute',
+                top: -10,
+                right: 12,
+                bgcolor: 'success.main',
+                color: '#fff',
+                px: 1.5,
+                py: 0.3,
+                borderRadius: 1,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                zIndex: 1,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+            }}>
+                {(score * 10).toFixed(0)}% MATCH
             </Box>
         )}
         <CardContent sx={{ flexGrow: 1, pt: recommended ? 3 : 2 }}>

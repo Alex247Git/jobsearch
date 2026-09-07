@@ -375,6 +375,7 @@ function Jobs({ user }) {
                                         onMessage={handleSelectEmployer}
                                         onSave={handleSaveJob}
                                         recommended
+                                        score={job.score}
                                     />
                                 ))}
                             </Grid>
