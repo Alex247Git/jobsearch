@@ -3,7 +3,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 30px;
-    color: white;
+    color: #374151;
     position: relative;
     z-index: 100;
 }
@@ -19,7 +19,7 @@
 
 .navbar-links a {
     text-decoration: none;
-    color: white;
+    color: #374151;
     font-size: 1.2rem;
     transition: color 0.3s;
 }
@@ -53,7 +53,7 @@
 
 .navbar-register-btn {
     background-color: #16A34A;
-    color: black;
+    color: white;
 }
 
 .navbar-register-btn:hover {
@@ -62,7 +62,7 @@
 
 .navbar-login-btn {
     background-color: #16A34A;
-    color: black;
+    color: white;
 }
 
 .navbar-login-btn:hover {
@@ -78,7 +78,7 @@
 .navbar-user-name-btn {
     all: unset;
     font-size: 1.25rem;
-    color: white;
+    color: #374151;
     cursor: pointer;
     line-height: 1;
     font-weight: normal;

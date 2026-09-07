@@ -15,7 +15,17 @@ function Header({ isAuthenticated, onLogout, toggleUserRole, userRole, user, emp
     };
 
     return (
-        <AppBar position="static" sx={{ backgroundColor: 'secondary.main' }}>
+        <AppBar
+            position="static"
+            color="transparent"
+            sx={{
+                backgroundColor: 'background.paper',
+                color: 'text.primary',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                boxShadow: 'none',
+            }}
+        >
             <Toolbar>
                 <Typography
                     variant="h1"
