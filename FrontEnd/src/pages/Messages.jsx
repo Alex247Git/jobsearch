@@ -1,154 +1,127 @@
 import React, { useEffect, useState, useRef } from "react";
 import { socket, connectSocket, disconnectSocket } from "../services/socket";
-import "./Messages.css";
+import {
+    Box, Paper, Stack, Typography, Avatar, TextField, IconButton, Divider, Alert,
+} from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 import { apiFetch } from '../api';
 
 function Messages({ user }) {
     const [conversations, setConversations] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState('');
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
         if (!user?.user_id) return;
         connectSocket(user.user_id);
         apiFetch(`/messages/conversations/${user.user_id}`)
-            .then(res => res.json())
-            .then(data => setConversations(data))
-            .catch(err => console.error("Error fetching conversations:", err));
-        const handleMessage = (data) => {
+            .then(res => res.json()).then(setConversations)
+            .catch(err => console.error(err));
+        const handle = (data) => {
             if (selectedUser && (data.sender_id === selectedUser.user_id || data.receiver_id === selectedUser.user_id)) {
-                setMessages((prevMessages) => [...prevMessages, data]);
+                setMessages(p => [...p, data]);
             }
         };
-        socket.on("receiveMessage", handleMessage);
-        return () => {
-            socket.off("receiveMessage", handleMessage);
-            disconnectSocket();
-        };
-    }, [user?.user_id, selectedUser?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
+        socket.on('receiveMessage', handle);
+        return () => { socket.off('receiveMessage', handle); disconnectSocket(); };
+    }, [user?.user_id, selectedUser?.user_id]);
 
-    const loadMessages = (conversation) => {
-        setSelectedUser(conversation);
-        apiFetch(`/messages/${user.user_id}/${conversation.user_id}`)
-            .then(res => res.json())
-            .then(data => {
-                setMessages(data);
-                scrollToBottom();
-            })
-            .catch(err => console.error("Error fetching messages:", err));
+    const loadMessages = (conv) => {
+        setSelectedUser(conv);
+        apiFetch(`/messages/${user.user_id}/${conv.user_id}`)
+            .then(res => res.json()).then(d => { setMessages(d); setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50); });
     };
 
     const sendMessage = () => {
         if (!message.trim() || !selectedUser) return;
-
-        const messageData = {
-            sender_id: user.user_id,
-            receiver_id: selectedUser.user_id,
-            message: message,
-        };
-
-        apiFetch(`/messages`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(messageData),
+        apiFetch('/messages', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender_id: user.user_id, receiver_id: selectedUser.user_id, message }),
         })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(err => { throw new Error(err.error || "Failed to send message"); });
-                }
-                return res.json();
-            })
-            .then(savedMessage => {
-                const newMessage = {
-                    message_id: savedMessage.messageId,
-                    sender_id: user.user_id,
-                    receiver_id: selectedUser.user_id,
-                    message: message,
-                    created_at: new Date().toISOString()
-                };
-
-                setMessages([...messages, newMessage]);
-                setMessage("");
-                socket.emit("sendMessage", newMessage);
-                scrollToBottom();
-            })
-            .catch(err => {
-                console.error("Error sending message:", err.message);
-                alert(`Error: ${err.message}`);
-            });
+        .then(r => r.json())
+        .then(saved => {
+            setMessages(p => [...p, {
+                message_id: saved.messageId || saved.message_id,
+                sender_id: user.user_id, receiver_id: selectedUser.user_id, message, created_at: new Date().toISOString(),
+            }]);
+            setMessage('');
+            socket.emit('sendMessage', saved);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+        });
     };
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        if (messages.length > 0) scrollToBottom();
-    }, [messages]);
 
     return (
-        <div className="chat-container">
-            <div className="sidebar">
-                <h3>Chats</h3>
-                <div className="conversation-list">
-                    {conversations.length > 0 ? (
-                        conversations.map((conv) => (
-                            <div
-                                key={conv.user_id}
-                                className={`conversation-item ${selectedUser?.user_id === conv.user_id ? "active" : ""}`}
+        <Box sx={{ display: 'flex', height: 'calc(100vh - 200px)', border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+            <Paper sx={{ width: 300, flexShrink: 0, borderRadius: 0, borderRight: 1, borderColor: 'divider' }} elevation={0}>
+                <Typography variant="h6" sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>Chats</Typography>
+                <Box sx={{ overflowY: 'auto', height: 'calc(100% - 64px)' }}>
+                    {conversations.length === 0 ? (
+                        <Typography sx={{ p: 3, color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }}>
+                            No conversations yet
+                        </Typography>
+                    ) : conversations.map(conv => {
+                        const isActive = selectedUser?.user_id === conv.user_id;
+                        return (
+                            <Stack key={conv.user_id} direction="row" spacing={1.5} alignItems="center"
                                 onClick={() => loadMessages(conv)}
-                            >
-                                <div className="conversation-avatar">{conv.first_name.charAt(0)}</div>
-                                <div className="conversation-info">
-                                    <p className="conversation-name">{conv.first_name} {conv.last_name}</p>
-                                    <p className="conversation-last-message">Click to view chat</p>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="no-conversations">You don't have open conversations</p>
-                    )}
-                </div>
-            </div>
-            <div className="chat-box">
+                                sx={{ p: 1.5, cursor: 'pointer', bgcolor: isActive ? 'action.selected' : 'transparent',
+                                    '&:hover': { bgcolor: 'action.hover' } }}>
+                                <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                                    {conv.first_name?.charAt(0)}
+                                </Avatar>
+                                <Box>
+                                    <Typography fontWeight="bold">{conv.first_name} {conv.last_name}</Typography>
+                                    <Typography variant="caption" color="text.secondary">Click to view chat</Typography>
+                                </Box>
+                            </Stack>
+                        );
+                    })}
+                </Box>
+            </Paper>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 {conversations.length === 0 ? (
-                    <div className="empty-chat-box">
-                        <p><strong>You don't have open conversations</strong></p>
-                    </div>
+                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography color="text.secondary">No open conversations</Typography>
+                    </Box>
                 ) : selectedUser ? (
                     <>
-                        <div className="chat-header">
-                            <h2>{selectedUser.first_name} {selectedUser.last_name}</h2>
-                        </div>
-                        <div className="messages">
-                            {messages.map((msg, index) => (
-                                <div
-                                    key={index}
-                                    className={`message ${msg.sender_id === user.user_id ? "sent" : "received"}`}
-                                >
-                                    <p>{msg.message}</p>
-                                </div>
-                            ))}
+                        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                            <Typography variant="h6">{selectedUser.first_name} {selectedUser.last_name}</Typography>
+                        </Box>
+                        <Box sx={{ flex: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {messages.map((m, i) => {
+                                const mine = m.sender_id === user.user_id;
+                                return (
+                                    <Box key={m.message_id || i} sx={{
+                                        alignSelf: mine ? 'flex-end' : 'flex-start',
+                                        bgcolor: mine ? '#DCFCE7' : 'grey.100',
+                                        color: 'text.primary',
+                                        maxWidth: '60%', px: 2, py: 1, borderRadius: 2,
+                                    }}>
+                                        <Typography variant="body2">{m.message}</Typography>
+                                    </Box>
+                                );
+                            })}
                             <div ref={messagesEndRef} />
-                        </div>
-                        <div className="input-container">
-                            <input
-                                type="text"
-                                value={message}
+                        </Box>
+                        <Stack direction="row" spacing={1} sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                            <TextField fullWidth size="small" placeholder="Type a message..." value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                placeholder="Type a message..."
-                                onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
-                            />
-                            <button onClick={sendMessage}>Send</button>
-                        </div>
+                                onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }} />
+                            <IconButton color="primary" onClick={sendMessage} disabled={!message.trim()}>
+                                <SendIcon />
+                            </IconButton>
+                        </Stack>
                     </>
                 ) : (
-                    <p className="select-chat"><strong>Select a conversation to start chatting</strong></p>
+                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography color="text.secondary">Select a conversation to start chatting</Typography>
+                    </Box>
                 )}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 }
 
