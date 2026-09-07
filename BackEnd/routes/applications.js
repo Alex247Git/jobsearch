@@ -6,36 +6,28 @@ const authorizeOwner = require('../middleware/authorizeOwner');
 const { logEvent } = require('../audit/auditLog');
 
 // POST new application
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { job_id, status, applied_at } = req.body;
     const user_id = req.user.user_id; // server-authoritative
 
-    db.query(
-        'SELECT * FROM applications WHERE user_id = ? AND job_id = ?',
-        [user_id, job_id],
-        (err, results) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
-
-            if (results.length > 0) {
-                return res.status(400).json({ error: 'You have already applied for this job.' });
-            }
-
-            db.query(
-                'INSERT INTO applications (user_id, job_id, status, applied_at) VALUES (?, ?, ?, ?)',
-                [user_id, job_id, status, applied_at],
-                (insertErr) => {
-                    if (insertErr) {
-                        console.error('Error inserting application:', insertErr);
-                        return res.status(500).json({ error: 'Internal server error' });
-                    }
-                    res.status(201).json({ message: 'Application submitted successfully!' });
-                }
-            );
+    try {
+        const [results] = await db.promise().query(
+            'SELECT * FROM applications WHERE user_id = ? AND job_id = ?',
+            [user_id, job_id]
+        );
+        if (results.length > 0) {
+            return res.status(400).json({ error: 'You have already applied for this job.' });
         }
-    );
+
+        await db.promise().query(
+            'INSERT INTO applications (user_id, job_id, status, applied_at) VALUES (?, ?, ?, ?)',
+            [user_id, job_id, status, applied_at]
+        );
+        res.status(201).json({ message: 'Application submitted successfully!' });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // GET all applications
@@ -55,7 +47,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET applications by candidate user_id
-router.get('/candidate/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
+router.get('/candidate/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -97,18 +89,18 @@ router.get('/candidate/:user_id', authenticateToken, authorizeSelf('user_id'), (
         JOIN users u ON u.user_id = e.user_id
         WHERE a.user_id = ?;`;
 
-    db.query(query, [user_id], (err, results) => {
-        if (err) {
-            console.error('Error fetching applications:', err.stack);
-            return res.status(500).json({ message: 'Failed to fetch applications' });
-        }
+    try {
+        const [results] = await db.promise().query(query, [user_id]);
         res.status(200).json(results);
-    });
+    } catch (err) {
+        console.error('Error fetching applications:', err.stack);
+        res.status(500).json({ message: 'Failed to fetch applications' });
+    }
 });
 
 
 // GET application by user_id
-router.get('/employer/:user_id', authenticateToken, authorizeSelf('user_id'), (req, res) => {
+router.get('/employer/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -134,13 +126,13 @@ router.get('/employer/:user_id', authenticateToken, authorizeSelf('user_id'), (r
     WHERE employers.user_id = ?`;
 
 
-    db.query(query, [user_id], (err, results) => {
-        if (err) {
-            console.error('Error fetching applicants:', err.stack);
-            return res.status(500).json({ message: 'Failed to fetch applicants' });
-        }
+    try {
+        const [results] = await db.promise().query(query, [user_id]);
         res.status(200).json(results);
-    });
+    } catch (err) {
+        console.error('Error fetching applicants:', err.stack);
+        res.status(500).json({ message: 'Failed to fetch applicants' });
+    }
 
 });
 

@@ -1,4 +1,5 @@
 const express = require('express');
+require('express-async-errors');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -32,6 +33,7 @@ const initializeSocket = require('./socket');
 
 const app = express();
 const { auditMiddleware } = require('./audit/auditLog');
+const errorHandler = require('./middleware/errorHandler');
 
 app.use(helmet());
 
@@ -71,6 +73,8 @@ app.use('/saved_jobs', savedJobsRouter);
 app.use('/search_history', searchHistoryRouter);
 app.use('/applications', applicationsRouter);
 app.use('/employed', employedRouter);
+
+app.use(errorHandler);
 
 if (require.main === module) {
     server.listen(PORT, () => {

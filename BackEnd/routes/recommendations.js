@@ -42,7 +42,7 @@ router.get("/jobs/:candidate_id", authenticateToken, authorizeSelf("candidate_id
     }
 });
 
-router.get('/candidates/:userId', authenticateToken, authorizeSelf('userId'), (req, res) => {
+router.get('/candidates/:userId', authenticateToken, authorizeSelf('userId'), async (req, res) => {
     const userId = parseInt(req.params.userId);
     const jobId = req.query.job_id ? parseInt(req.query.job_id) : null;
     const limit = parseInt(req.query.limit) || 10;
@@ -69,13 +69,13 @@ router.get('/candidates/:userId', authenticateToken, authorizeSelf('userId'), (r
     }
     sql += ' ORDER BY r.score DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
-    db.query(sql, params, (err, results) => {
-        if (err) {
-            console.error("Error fetching candidate recommendations:", err);
-            return res.status(500).json({ error: "Database error" });
-        }
+    try {
+        const [results] = await db.promise().query(sql, params);
         res.json(results);
-    });
+    } catch (err) {
+        console.error("Error fetching candidate recommendations:", err);
+        res.status(500).json({ error: "Database error" });
+    }
 });
 
 // ✅ PUT - Update recommendation score
