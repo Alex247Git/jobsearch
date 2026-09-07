@@ -25,17 +25,17 @@
 .company-header h1 {
     font-size: 2.5rem;
     margin: 10px 0;
-    color: #333;
+    color: #111827;
 }
 
 .company-location {
     font-size: 1.1rem;
-    color: #555;
+    color: #6B7280;
 }
 
 .company-info {
     padding: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #E5E7EB;
 }
 
 .company-info p {
@@ -45,13 +45,13 @@
 }
 
 .company-info strong {
-    color: #222;
+    color: #111827;
 }
 
 .loading-text, .error-text {
     text-align: center;
     font-size: 1.2rem;
-    color: #666;
+    color: #6B7280;
     margin-top: 50px;
 }
 

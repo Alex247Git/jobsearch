@@ -1,7 +1,7 @@
 .chat-container {
     display: flex;
     height: 70vh;
-    border: 1px solid #ddd;
+    border: 1px solid #E5E7EB;
     border-radius: 8px;
     overflow: hidden;
 
@@ -11,7 +11,7 @@
     width: 30%;
     background: #f7f7f7;
     padding: 15px;
-    border-right: 1px solid #ddd;
+    border-right: 1px solid #E5E7EB;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -41,7 +41,7 @@
 
 .conversation-item:hover,
 .conversation-item.active {
-    background: #ddd;
+    background: #E5E7EB;
 }
 
 .conversation-avatar {
@@ -68,7 +68,7 @@
 
 .chat-header {
     padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #E5E7EB;
     font-size: 20px;
     font-weight: bold;
 }
@@ -80,7 +80,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #E5E7EB;
 }
 
 .message {
@@ -112,7 +112,7 @@
 input {
     flex-grow: 1;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #E5E7EB;
     border-radius: 5px;
     font-size: 16px;
 }
@@ -134,7 +134,7 @@ button:hover {
 .select-chat {
     font-size: 1.5rem;
     text-align: center;
-    color: #555;
+    color: #6B7280;
     font-weight: 500;
     height: 100%;
     display: flex;
@@ -145,7 +145,7 @@ button:hover {
 .empty-chat-box {
     font-size: 1.2rem;
     text-align: center;
-    color: #777;
+    color: #6B7280;
     font-weight: 500;
     height: 100%;
     display: flex;
@@ -156,7 +156,7 @@ button:hover {
 
 .no-conversations {
     text-align: center;
-    color: #777;
+    color: #6B7280;
     font-style: italic;
     padding: 20px;
 }

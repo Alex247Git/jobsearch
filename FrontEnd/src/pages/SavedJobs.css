@@ -9,7 +9,7 @@
 .saved-jobs-container h1 {
     margin-bottom: 20px;
     font-size: 28px;
-    color: #333;
+    color: #111827;
 }
 
 .saved-job-listings {
@@ -42,7 +42,7 @@
 
 .saved-job-card p {
     margin: 8px 0;
-    color: #555;
+    color: #6B7280;
 }
 
 .saved-remove-button {

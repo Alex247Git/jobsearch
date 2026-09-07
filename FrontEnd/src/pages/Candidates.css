@@ -35,7 +35,7 @@
     padding: 8px;
     margin-top: 5px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid #E5E7EB;
 }
 
 .candidates-content {
@@ -54,7 +54,7 @@
 
 .candidate-card {
     background-color: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid #E5E7EB;
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -73,13 +73,13 @@
 
 .candidate-card h3 {
     font-size: 20px;
-    color: #333;
+    color: #111827;
     margin-top: 0;
 }
 
 .candidate-card p {
     margin: 3px 0;
-    color: #555;
+    color: #6B7280;
 }
 
 .candidate-buttons {

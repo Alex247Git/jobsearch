@@ -19,7 +19,7 @@
 }
 
 .my-employees-card {
-    border: 1px solid #ccc;
+    border: 1px solid #E5E7EB;
     border-radius: 1rem;
     padding: 1rem;
     background-color: #fff;
@@ -34,7 +34,7 @@
 
 .my-employees-card p {
     font-size: 0.875rem;
-    color: #555;
+    color: #6B7280;
     margin: 0.25rem 0;
 }
 
@@ -51,7 +51,7 @@
     margin-bottom: 10px;
     padding: 8px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid #E5E7EB;
     font-size: 14px;
     resize: vertical;
 }
