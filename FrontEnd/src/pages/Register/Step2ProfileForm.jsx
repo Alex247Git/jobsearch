@@ -23,7 +23,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -56,7 +56,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -88,7 +88,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -121,7 +121,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -153,7 +153,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -186,7 +186,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -218,7 +218,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -250,7 +250,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -282,7 +282,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -314,7 +314,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -345,7 +345,7 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -371,10 +371,10 @@ function Step2ProfileForm({ data, onChange, onSubmit, loading }) {
             sx={{
                 mt: 2,
                 py: 1.5,
-                backgroundColor: '#b4f000 !important',
-                color: '#282c34 !important',
+                backgroundColor: 'primary.main',
+                color: 'primary.contrastText',
                 '&:hover': {
-                    backgroundColor: '#a0d600 !important',
+                    backgroundColor: 'primary.dark',
                 },
                 textTransform: 'none',
                 fontWeight: 'bold',

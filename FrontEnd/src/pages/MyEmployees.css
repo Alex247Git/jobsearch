@@ -39,7 +39,7 @@
 }
 
 .my-employees-card a {
-    color: #2563eb;
+    color: #16A34A;
     text-decoration: underline;
 }
 
@@ -68,7 +68,7 @@
     text-align: center;
     align-items: center;
     margin-top: 0.75rem;
-    background-color: #2563eb;
+    background-color: #16A34A;
     color: white;
     padding: 0.5rem 1rem;
     border: none;
@@ -78,7 +78,7 @@
 }
 
 .my-employees-card button:hover {
-    background-color: #1e40af;
+    background-color: #15803D;
 }
 
 .my-employees-message {

@@ -23,7 +23,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -56,7 +56,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -88,7 +88,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -120,7 +120,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -152,7 +152,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -180,7 +180,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
                 sx={{
                     color: 'black',
                     '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: 'secondary.main',
@@ -206,7 +206,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
                 sx={{
                     color: 'black',
                     '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                         borderColor: 'secondary.main',
@@ -235,7 +235,7 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
             sx={{
                 '& .MuiOutlinedInput-root': {
                     '& fieldset': {
-                        borderColor: '#282c34',
+                        borderColor: 'divider',
                     },
                     '&:hover fieldset': {
                         borderColor: 'secondary.main',
@@ -261,8 +261,8 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
                 sx={{
                     flex: 1,
                     py: 1.5,
-                    color: '#282c34',
-                    borderColor: '#282c34',
+                    color: 'primary.contrastText',
+                    borderColor: 'divider',
                     '&:hover': {
                         borderColor: 'secondary.main',
                         backgroundColor: 'rgba(180, 240, 0, 0.1)',
@@ -282,10 +282,10 @@ function Step4JobPostForm({ data, onChange, onSubmit, onPostAnother, loading }) 
                 sx={{
                     flex: 1,
                     py: 1.5,
-                    backgroundColor: '#b4f000 !important',
-                    color: '#282c34 !important',
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
                     '&:hover': {
-                        backgroundColor: '#a0d600 !important',
+                        backgroundColor: 'primary.dark',
                     },
                     textTransform: 'none',
                     fontWeight: 'bold',

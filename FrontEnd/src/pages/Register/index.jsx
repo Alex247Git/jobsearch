@@ -253,7 +253,7 @@ const handleSubmitJob = async (e) => {
                         borderRadius: '16px',
                         backgroundColor: 'white',
                         overflow: 'hidden',
-                        border: '4px solid #282c34',
+                        border: '4px solid', borderColor: 'divider',
                         mx: 'auto',
                         p: 3,
                     }}

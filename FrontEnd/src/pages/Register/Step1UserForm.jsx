@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, Select, MenuItem, FormControl, Inpu
 
 const textFieldSx = {
     '& .MuiOutlinedInput-root': {
-        '& fieldset': { borderColor: '#282c34' },
+        '& fieldset': { borderColor: 'divider' },
         '&:hover fieldset': { borderColor: 'secondary.main' },
         '&.Mui-focused fieldset': { borderColor: 'secondary.main' },
         '&.Mui-focused .MuiInputLabel-root': { color: 'black !important' },
@@ -31,7 +31,7 @@ function Step1UserForm({ data, onChange, onSubmit, loading }) {
                         <MenuItem value="employer">Employer</MenuItem>
                     </Select>
                 </FormControl>
-                <Button type="submit" fullWidth variant="contained" disabled={loading} sx={{ mt: 2, py: 1.5, backgroundColor: '#b4f000 !important', color: '#282c34 !important', '&:hover': { backgroundColor: '#a0d600 !important' }, textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}>
+                <Button type="submit" fullWidth variant="contained" disabled={loading} sx={{ mt: 2, py: 1.5, backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' }, textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}>
                     {loading ? 'Creating Account...' : 'Continue'}
                 </Button>
             </Box>
