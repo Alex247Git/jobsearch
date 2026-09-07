@@ -28,6 +28,7 @@ import { useNotification } from '../../context/NotificationContext';
 import JobFilters from './JobFilters';
 import JobCard from './JobCard';
 import MessageDialog from './MessageDialog';
+import { JobListSkeleton } from '../../components/Skeletons';
 
 function Jobs({ user }) {
     const navigate = useNavigate();
@@ -48,15 +49,18 @@ function Jobs({ user }) {
     const [recommendedJobs, setRecommendedJobs] = useState([]);
     const [companyRatings, setCompanyRatings] = useState([]);
     const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
 
 
     useEffect(() => {
+        setLoading(true);
         apiFetch(`/jobs`)
             .then(response => response.json())
             .then(data => {
                 setJobs(Array.isArray(data) ? data : []);
             })
-            .catch(error => console.error('Error fetching jobs:', error));
+            .catch(error => console.error('Error fetching jobs:', error))
+            .finally(() => setLoading(false));
     }, []);
 
     useEffect(() => {
@@ -430,7 +434,9 @@ function Jobs({ user }) {
                         All Jobs
                     </Typography>
 
-                    {filteredJobs.length > 0 ? (
+                    {loading ? (
+                        <JobListSkeleton count={6} />
+                    ) : filteredJobs.length > 0 ? (
                         <Grid container spacing={3} sx={{ px: 0 }}>
                             {filteredJobs.map((job) => (
                                 <JobCard

@@ -10,6 +10,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { apiFetch } from '../api';
 import { useNotification } from '../context/NotificationContext';
+import { ProfileSkeleton } from '../components/Skeletons';
 
 const FIELDS = [
     { key: 'location', label: 'Location', icon: <LocationOnIcon fontSize="small" /> },
@@ -76,7 +77,7 @@ function Profile({ user }) {
         }
     };
 
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, p: 4 }}><ProfileSkeleton /></Box>;
     if (error) return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
     if (!userData) return <Container sx={{ mt: 4 }}><Alert severity="info">No user data found</Alert></Container>;
 
