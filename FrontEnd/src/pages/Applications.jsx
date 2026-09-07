@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Container, Box, Paper, Stack, Typography, Button, Card, CardContent, CardActions,
     CircularProgress, Alert,
@@ -7,10 +8,12 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../api';
+import { EmptyState } from '../components/EmptyState';
 
 function Applications({ user }) {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const user_id = user?.user_id;
 
     useEffect(() => {
@@ -31,7 +34,19 @@ function Applications({ user }) {
 
     if (!user_id) return <Container sx={{ mt: 4 }}><Alert severity="warning">Please log in.</Alert></Container>;
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
-    if (applications.length === 0) return <Container sx={{ mt: 4 }}><Alert severity="info">You haven't applied to any jobs yet.</Alert></Container>;
+    if (applications.length === 0) {
+        return (
+            <Container maxWidth="md" sx={{ py: 6 }}>
+                <EmptyState
+                    icon="work"
+                    title="No applications yet"
+                    message="Start applying to jobs and track your progress here!"
+                    actionLabel="Find Jobs"
+                    onAction={() => navigate('/Jobs')}
+                />
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>

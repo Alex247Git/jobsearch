@@ -8,6 +8,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../api';
+import { EmptyState } from '../components/EmptyState';
 
 function SavedJobs({ user }) {
     const [savedJobs, setSavedJobs] = useState([]);
@@ -32,7 +33,19 @@ function SavedJobs({ user }) {
 
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
     if (!user_id) return <Container sx={{ mt: 4 }}><Alert severity="warning">Please log in.</Alert></Container>;
-    if (savedJobs.length === 0) return <Container sx={{ mt: 4 }}><Alert severity="info">You have no saved jobs.</Alert></Container>;
+    if (savedJobs.length === 0) {
+        return (
+            <Container maxWidth="md" sx={{ py: 6 }}>
+                <EmptyState
+                    icon="bookmark"
+                    title="No saved jobs yet"
+                    message="Jobs you save will appear here. Browse opportunities and bookmark your favorites!"
+                    actionLabel="Browse Jobs"
+                    onAction={() => navigate('/Jobs')}
+                />
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>
