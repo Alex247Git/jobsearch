@@ -37,6 +37,12 @@ const errorHandler = require('./middleware/errorHandler');
 
 app.use(helmet());
 
+// Trust the reverse proxy (nginx) hop: req.ip / express-rate-limit then read
+// the real client IP from X-Forwarded-For instead of the proxy's address
+// (otherwise every proxied user shares ONE rate-limit bucket and
+// express-rate-limit logs ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set('trust proxy', 1);
+
 // Brute-force protection for the login endpoint.
 // Note: in-memory store — restarts clear the counter, so in
 // development restart the server if you lock yourself out.

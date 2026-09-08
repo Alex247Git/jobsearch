@@ -1,0 +1,62 @@
+# Version control
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+BackEnd/node_modules/
+FrontEnd/node_modules/
+
+# Build artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.docker
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage
+coverage/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+
+# CI
+.github/
+
+# Documentation (not needed in containers)
+docs/
+*.md
+
+# Frontend build output
+FrontEnd/build/
+FrontEnd/dist/
+FrontEnd/.vite/
+
+# Backend audit logs (runtime-generated log files, NOT the source code)
+BackEnd/audit/*.log
+
+# Backend test files (not needed in runtime container)
+BackEnd/Tests/
+BackEnd/*.test.js
+BackEnd/server.test.js
+
+# Docker files (not needed inside images)
+Dockerfile
+docker-compose*.yml
+
+# OS
+.DS_Store

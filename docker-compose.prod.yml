@@ -1,0 +1,51 @@
+# ================================================================
+# jobsearch — Production overlay
+# ----------------------------------------------------------------
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# What it changes:
+#   1. REQUIRES strong secrets (fail-fast, never the dev defaults)
+#   2. Removes the MySQL host port (private to the compose network)
+#   3. Adds Caddy in front: automatic Let's Encrypt TLS on 80 + 443
+#
+# Required env vars (see .env.example): DOMAIN, JWT_SECRET,
+# MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, CORS_ORIGIN.
+#
+# Requires Docker Compose >= 2.24 (`!reset`).
+# ================================================================
+
+services:
+  api:
+    environment:
+      # Fail-fast: never boot production with dev defaults.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required in production (set it in .env)}
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required in production}
+      DB_NAME: ${MYSQL_DATABASE:?MYSQL_DATABASE is required in production}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN must be the public origin (e.g. https://jobs.example.com)}
+
+  mysql:
+    # MySQL stays internal to the compose network — no host port exposed.
+    ports: !reset []
+
+  # TLS edge: terminates HTTPS, auto-provisions/renews Let's Encrypt certs,
+  # forwards all traffic to the internal nginx (web:80).
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 (QUIC)
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required (e.g. jobs.example.com, no scheme)}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
