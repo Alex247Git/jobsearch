@@ -41,3 +41,11 @@ jobs:
         run: CI=true npx vitest run
       - name: Production build
         run: CI=true npx vite build
+
+  docker:
+    name: Docker build (compose)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose build
