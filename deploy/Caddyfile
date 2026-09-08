@@ -1,0 +1,22 @@
+# ================================================================
+# Caddyfile — TLS edge for the jobsearch production stack.
+# The {$DOMAIN} env var is injected by docker-compose.prod.yml.
+# Caddy automatically obtains & renews a Let's Encrypt certificate
+# for that domain — no extra configuration needed.
+#
+# Optional: put `email you@example.com` on the first line to receive
+# certificate expiry notifications.
+# ================================================================
+
+{$DOMAIN} {
+    encode gzip
+
+    # Frontend build + /api proxying both live behind the nginx container
+    reverse_proxy web:80
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

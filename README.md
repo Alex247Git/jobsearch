@@ -32,7 +32,7 @@ What makes it stand out from a typical tutorial project:
 | 💬 **Real-time chat** | Socket.io bidirectional messaging between candidates & employers |
 | 🔐 **Production-grade security** | JWT auth, role-based + resource-based authorization, rate limiting, helmet, audit log |
 | 🧪 **Real tests** | 23 backend (jest, mocked DB) + 7 frontend (vitest) — not boilerplate |
-| 🏗️ **CI/CD** | GitHub Actions: backend tests + frontend tests + production build on every push |
+| 🏗️ **CI/CD** | GitHub Actions: backend tests + frontend tests + production build + docker compose build on every push |
 | 📦 **Clean deps** | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides |
 | 🏎️ **Modern stack** | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express |
 | 🎨 **Polished UI** | Toast notifications, loading skeletons, empty states, smooth micro-interactions |
@@ -118,8 +118,11 @@ What makes it stand out from a typical tutorial project:
 ```
 jobsearch/
 ├── BackEnd/                  Express server, routes, middleware
-├── FrontEnd/                 Vite + React app
-├── .github/workflows/ci.yml  Backend + Frontend CI
+├── FrontEnd/                 Vite + React app (Dockerfile + nginx.conf)
+├── .github/workflows/ci.yml  Backend + Frontend + Docker CI
+├── docker-compose.yml        Dev stack (api / web / mysql / adminer)
+├── docker-compose.prod.yml   Production overlay (secrets + TLS)
+├── deploy/Caddyfile          TLS edge (automatic Let's Encrypt)
 ├── .env.example
 ├── LICENSE                   MIT
 ├── CHANGES_REPORT.md         Full changelog
@@ -130,6 +133,21 @@ jobsearch/
 ---
 
 ## 🚀 Getting Started
+
+### 🐳 Run with Docker (recommended) — one command for everything
+
+```bash
+git clone https://github.com/Alex247Git/jobsearch.git
+cd jobsearch
+docker compose --profile dev up --build
+```
+
+- Frontend → http://localhost:3000 · Adminer (DB GUI) → http://localhost:8080
+- Demo login: `maria@techcorp.gr` / `Passw0rd!123`
+- Full guide (ports, env vars, troubleshooting, **production TLS**):
+  **[README-setup.md](README-setup.md)**
+
+No Docker, or prefer to run services manually? Follow the steps below.
 
 ### Prerequisites
 - **Node.js** ≥ 20
@@ -293,7 +311,7 @@ See [SENIOR_LEVEL_REPORT.md](SENIOR_LEVEL_REPORT.md) for what a 5+ year engineer
 
 1. Refresh tokens with rotation
 2. TypeScript migration
-3. Docker compose for the full stack
+3. ~~Docker compose for the full stack~~ ✅ done — dev stack + production TLS overlay, see [README-setup.md](README-setup.md)
 4. Layered architecture (services + repositories)
 5. Structured logging + Sentry
 

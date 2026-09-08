@@ -7,30 +7,38 @@
 git clone https://github.com/Alex247Git/jobsearch.git
 cd jobsearch
 
-# 2. Εκτέλεσε ένα μόνο command
+# 2. (Προαιρετικό) το δικό σου .env — χωρίς .env δουλεύει με dev defaults
+cp .env.example .env     # μπορείς και να το παραλείψεις για αρχή
+
+# 3. Χτίσε και σήκωσε όλο το stack (πρώτο build: ~3-5 λεπτά, ~500MB)
 docker compose up --build
 
-# 3. Άνοιξε το browser σου
+# 4. Άνοιξε τον browser
 http://localhost:3000
 ```
 
-Το πρώτο build παίρνει ~3-5 λεπτά (καμιά στιγμή ~500MB packages).
+> Θες και το **Adminer** (GUI για τη βάση); Τρέξε με
+> `docker compose --profile dev up --build` → http://localhost:8080
+
+**Σταμάτησε / ξανασήκωσε** όταν χρειαστεί: `docker compose down` · `docker compose up -d`
 
 ## ✅ Προαπαιτούμενα
 
-- **Docker Engine ≥ 20.10** με **Docker Compose v2** (`docker compose version`) — το compose file χρησιμοποιεί `depends_on: condition: service_healthy` που δεν υποστηρίζεται στο legacy Compose v1
-- Linux / macOS / Windows (Docker Desktop ή WSL2), 64-bit
-- Ελεύθερες πόρτες: **3000**, **5000**, **3306**, **8080** (MySQL κοινό default port)
-- Το MySQL κάνει seed μόνο στο **πρώτο** `up` (persistent volume `mysql_data`) — για re-seed από νέο: `docker compose down -v && docker compose up -d`
+- **Docker ≥ 20.10** + **Docker Compose v2.24+** (`docker compose version`)
+  - το compose χρησιμοποιεί `depends_on: condition: service_healthy` και (στο prod overlay) `!reset` — το legacy Compose v1 δεν δουλεύει
+- Linux / macOS / Windows (WSL2 ή Docker Desktop), 64-bit
+- Ελεύθερες πόρτες: **3000**, **5000**, **8080** και **127.0.0.1:3306**
 
-## 🎯 Τι περιλαμβάνεται
+## 🎯 Τι τρέχει
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Frontend** | http://localhost:3000 | React + Vite (served by nginx) |
+| Service | URL | Notes |
+|---------|-----|-------|
+| **Frontend** | http://localhost:3000 | React + Vite, served by nginx |
 | **Backend** | http://localhost:5000 | Node.js + Express |
-| **Database** | localhost:3306 | MySQL 8 |
-| **Adminer** | http://localhost:8080 | Database GUI |
+| **MySQL** | 127.0.0.1:3306 | bound στο loopback — δεν φαίνεται έξω |
+| **Adminer** | http://localhost:8080 | μόνο με `--profile dev` |
+
+Το MySQL κάνει **seed αυτόματα** στην πρώτη εκκίνηση (`schema.sql` → `seed.sql`).
 
 ## 🔑 Demo Accounts
 
@@ -45,16 +53,18 @@ Email: eleni.cand@gmail.com
 Password: Passw0rd!123
 ```
 
-## 🗄️ Database Seed
+## ⚙️ Περιβάλλον (env vars)
 
-Το demo data εισάγεται αυτόματα όταν ξεκινάει για πρώτη φορά η MySQL container.
-Οι τελευταίες γραμμές δημιουργούν τους πίνακες (schema.sql) και μετά εισάγουν τα
-δεδομένα (seed.sql) μέσα στον container.
+Το stack τρέχει **χωρίς καμία ρύθμιση**. Για αλλαγές: `cp .env.example .env`
+και επεξεργάστησε τις τιμές. Σημαντικότερες:
 
-```bash
-# Manual re-seed (αν χρειαστεί):
-docker compose exec mysql mysql -uroot -prootpass jobsearch < seed.sql
-```
+| Variable | Default | Σχόλιο |
+|----------|---------|--------|
+| `JWT_SECRET` | `dev-secret-change-me` | **Σε production πάντα** μακρύ τυχαίο (`openssl rand -hex 32`) |
+| `MYSQL_ROOT_PASSWORD` | `rootpass` | άλλαξε σε production |
+| `MYSQL_DATABASE` | `jobsearch` | — |
+| `CORS_ORIGIN` | `http://localhost:3000` | σε production: `https://your-domain` |
+| `PORT` / `WEB_PORT` / `MYSQL_PORT` | `5000` / `3000` / `3306` | αν σου τα πιάνει κάτι άλλο |
 
 ## 🔧 Troubleshooting
 
@@ -63,27 +73,51 @@ docker compose exec mysql mysql -uroot -prootpass jobsearch < seed.sql
 docker compose down
 docker compose up --build --force-recreate
 
-# Αν το MySQL δεν αρχίζει
-docker compose down -v  # Deletes volume (απώλεια data)
+# Αν αναδημιουργήσεις ΜΟΝΟ το api (και το web σερβίρει 502):
+docker compose restart web   # ο nginx κρατά την IP του api από το startup
+
+# Αν το MySQL κολλήσει
+docker compose down   # κρατάει τα data (χωρίς -v)
+docker compose up -d
+
+# Re-seed από μηδέν (ΣΒΗΝΕΙ τα data)
+docker compose down -v
 docker compose up -d
 
 # Logs
-docker compose logs -f
-
-# Logs για ένα συγκεκριμένο service
-docker compose logs -f api
-docker compose logs -f web
-docker compose logs -f mysql
+docker compose logs -f [api|web|mysql]
 ```
 
-## 📦 Production Deployment
+## 📦 Production (TLS + ασφαλή secrets)
 
-Για deployment σε Render/Railway/Hetzner:
+Το **production overlay** (`docker-compose.prod.yml` — τρέχει **επάνω** από το
+βασικό file):
+
+1. **Απαιτεί** ισχυρά secrets — αποτυχάνει στην εκκίνηση αν λείπουν (δε
+   λειτουργεί με τα dev defaults)
+2. **Κλειδώνει το MySQL** — zero host ports, μόνο το compose network
+3. **Βάζει Caddy μπροστά**: αυτόματο **Let's Encrypt TLS** στο 443 με
+   auto-renew (HTTP/2 & HTTP/3) — το nginx (web:80) μένει εσωτερικά
 
 ```bash
-# Production build
-docker compose -f docker-compose.yml up --build -d
+# 1. .env με production τιμές
+JWT_SECRET=$(openssl rand -hex 32)
+MYSQL_ROOT_PASSWORD=<ισχυρό password>
+MYSQL_DATABASE=jobsearch
+CORS_ORIGIN=https://jobs.example.com
+DOMAIN=jobs.example.com              # χωρίς https://
 
-# Ή με .env.production
-docker compose --env-file .env.production up --build
+# 2. DNS: A/AAAA record για το DOMAIN → server
+# 3. Άνοιξε τα 80 + 443 στο firewall
+# 4. Εκκίνηση
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
+
+Σε λίγα δευτερόλεπτα το `https://jobs.example.com` σερβίρει το site με έγκυρο
+certificate — και το Caddy το ανανεώνει μόνο του. Θες email ειδοποιήσεων για τα
+certificates; Πρόσθεσε `email you@example.com` στην πρώτη γραμμή του
+`deploy/Caddyfile`.
+
+> Τα credentials **δεν υπάρχουν πλέον** μέσα στο `docker-compose.yml` — όλα
+> έρχονται από `.env` (gitignored) ή χρησιμοποιούν dev defaults μόνο εκτός
+> production.
