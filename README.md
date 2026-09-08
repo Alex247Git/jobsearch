@@ -308,10 +308,8 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 Priorities we'd tackle next:
 
 1. Refresh tokens with rotation
-2. TypeScript migration
-3. ~~Docker compose for the full stack~~ ✅ done — dev stack (api / web / mysql / adminer)
-4. Layered architecture (services + repositories)
-5. Structured logging + Sentry
+2. Layered architecture (services + repositories)
+3. Structured logging + Sentry
 
 ---
 
