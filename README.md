@@ -127,7 +127,7 @@ jobsearch/
 ├── LICENSE                   MIT
 ├── CHANGES_REPORT.md         Full changelog
 ├── SENIOR_LEVEL_REPORT.md    Roadmap for next-level improvements
-└── docs/PLAN.md              Planning notes
+├── docs/                   Docker guide (DOCKER.md) + planning notes
 ```
 
 ---
@@ -145,7 +145,7 @@ docker compose --profile dev up --build
 - Frontend → http://localhost:3000 · Adminer (DB GUI) → http://localhost:8080
 - Demo login: `maria@techcorp.gr` / `Passw0rd!123`
 - Full guide (ports, env vars, troubleshooting, **production TLS**):
-  **[README-setup.md](README-setup.md)**
+  **[docs/DOCKER.md](docs/DOCKER.md)**
 
 No Docker, or prefer to run services manually? Follow the steps below.
 
@@ -311,7 +311,7 @@ See [SENIOR_LEVEL_REPORT.md](SENIOR_LEVEL_REPORT.md) for what a 5+ year engineer
 
 1. Refresh tokens with rotation
 2. TypeScript migration
-3. ~~Docker compose for the full stack~~ ✅ done — dev stack + production TLS overlay, see [README-setup.md](README-setup.md)
+3. ~~Docker compose for the full stack~~ ✅ done — dev stack + production TLS overlay, see [docs/DOCKER.md](docs/DOCKER.md)
 4. Layered architecture (services + repositories)
 5. Structured logging + Sentry
 
