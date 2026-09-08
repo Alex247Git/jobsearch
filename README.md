@@ -155,40 +155,45 @@ cd jobsearch
 
 ### 2. Start MySQL
 ```bash
-podman run -d --name jobsearch-mysql -p 3306:3306 \
+docker run -d --name jobsearch-mysql -p 127.0.0.1:3306:3306 \
   -e MYSQL_ROOT_PASSWORD=jobsearchrootpass \
   -e MYSQL_DATABASE=jobsearch \
   -e MYSQL_USER=jobsearchuser \
   -e MYSQL_PASSWORD=jobsearchuserpassword \
-  docker.io/library/mysql:8.0.31
+  docker.io/library/mysql:8
 ```
 
 ### 3. Set up environment
 ```bash
 cp .env.example .env
-# Edit .env: set JWT_SECRET to a long random string, fill in DB credentials
+# Edit .env — set the STANDALONE BACKEND section (db.js has no defaults):
+#   DB_HOST=localhost
+#   DB_USER=jobsearchuser
+#   DB_PASSWORD=jobsearchuserpassword
+#   DB_NAME=jobsearch
+# and JWT_SECRET to a long random string
 ```
 
 ### 4. Import schema
 ```bash
-podman exec -i jobsearch-mysql mysql -uroot -pjobsearchrootpass jobsearch < schema.sql
+docker exec -i jobsearch-mysql mysql -uroot -pjobsearchrootpass jobsearch < schema.sql
 ```
 
 ### 5. Install & run
 
-**Backend** (terminal 1):
+**Backend** (terminal 1) — use `backend:start`, not `npm start`:
 ```bash
 npm install
-npm test          # 23 jest tests with mocked DB
-npm start         # http://localhost:5000
+npm run test:backend   # 23 jest tests with mocked DB
+npm run backend:start  # http://localhost:5000
 ```
 
 **Frontend** (terminal 2):
 ```bash
 cd FrontEnd
 npm install
-npm test          # 7 vitest tests
-npm start         # http://localhost:3000
+npm test               # 7 vitest tests
+npm start              # http://localhost:3000
 ```
 
 ---
