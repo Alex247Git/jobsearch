@@ -1,48 +1,13 @@
-const { Worker } = require('worker_threads');
-const path = require('path');
+// Run recommendation generation directly in main process
+// (Worker threads have issues with MySQL connections in rootless podman)
+const { generateJobRecommendations: workerGenerateJob, generateCandidateRecommendations: workerGenerateCandidate } = require('./recommendationWorker');
 
 async function generateJobRecommendations() {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(path.join(__dirname, 'recommendationWorker.js'));
-        worker.postMessage({ type: 'generateJobRecommendations' });
-        worker.on('message', (message) => {
-            if (message.type === 'done' && message.function === 'generateJobRecommendations') {
-                worker.terminate();
-                resolve();
-            }
-        });
-        worker.on('error', (error) => {
-            console.error('Worker error:', error);
-            reject(error);
-        });
-        worker.on('exit', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code ${code}`));
-            }
-        });
-    });
+    return workerGenerateJob();
 }
 
 async function generateCandidateRecommendations() {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(path.join(__dirname, 'recommendationWorker.js'));
-        worker.postMessage({ type: 'generateCandidateRecommendations' });
-        worker.on('message', (message) => {
-            if (message.type === 'done' && message.function === 'generateCandidateRecommendations') {
-                worker.terminate();
-                resolve();
-            }
-        });
-        worker.on('error', (error) => {
-            console.error('Worker error:', error);
-            reject(error);
-        });
-        worker.on('exit', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code ${code}`));
-            }
-        });
-    });
+    return workerGenerateCandidate();
 }
 
 module.exports = {

@@ -1,4 +1,4 @@
-const { generateJobRecommendations, generateCandidateRecommendations } = require('../recommendationSystemNew');
+const { generateJobRecommendations, generateCandidateRecommendations } = require('../recommendationWorker');
 
 let status = 'idle'; // idle | running | done | error
 let lastRun = null;
@@ -9,27 +9,49 @@ async function generateForUser(userId) {
     await generateJobRecommendations();
 }
 
+// Retry helper with exponential backoff
+async function withRetry(fn, retries = 3, delay = 5000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await fn();
+            return;
+        } catch (err) {
+            console.warn(`⚠️ Attempt ${i + 1}/${retries} failed: ${err.message}`);
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
 async function generateForAll() {
     if (status === 'running') return;
     status = 'running';
     lastError = null;
+
+    // Generate job recommendations (critical)
     try {
-        await generateJobRecommendations();
+        await withRetry(generateJobRecommendations, 3, 3000);
         console.log('✅ Job recommendations generated');
     } catch (err) {
-        console.error('❌ Job recommendations failed:', err);
-        lastError = err.message;
+        console.error('❌ Job recommendations failed after retries:', err.message);
+        lastError = `Job recs: ${err.message}`;
     }
-    // Wait a bit for DB to be ready for candidate recommendations
-    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Wait for DB pool to stabilize before candidate recommendations
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Generate candidate recommendations (non-critical, can fail gracefully)
     try {
-        await generateCandidateRecommendations();
+        await withRetry(generateCandidateRecommendations, 3, 5000);
         console.log('✅ Candidate recommendations generated');
     } catch (err) {
-        console.error('❌ Candidate recommendations failed:', err.message);
-        // Don't overwrite lastError if job recs succeeded
-        if (!lastError) lastError = `Candidate recs failed: ${err.message}`;
+        console.error('❌ Candidate recommendations failed after retries:', err.message);
+        if (!lastError) lastError = `Candidate recs: ${err.message}`;
     }
+
     status = 'done';
     lastRun = new Date().toISOString();
 }
@@ -58,11 +80,11 @@ module.exports = {
     generateForUser,
     generateForAll,
     getStatus,
-    initRecommendations: () => {
-        // Wait 10s for MySQL to be ready before starting recommendations
+        initRecommendations: () => {
+        // Wait 20s for MySQL + ONNX runtime to be fully ready
         setTimeout(() => {
             generateForAll();
             scheduleDailyRefresh();
-        }, 10000);
+        }, 20000);
     },
 };

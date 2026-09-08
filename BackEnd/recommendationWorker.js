@@ -1,6 +1,37 @@
-const { parentPort } = require('worker_threads');
 const db = require('./db');
-const { computeSimilarityBatch, computeSimilarity, composeText } = require('./semanticMatcherNew');
+const { computeSimilarityBatch } = require('./semanticMatcherNew');
+
+// Retry wrapper for functions that may fail
+const retryWithDelay = async (fn, retries = 3, delay = 5000, fnName = 'unnamed') => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      console.error(`[${fnName}] Attempt ${attempt}/${retries} failed:`, error.message);
+      if (attempt === retries) {
+        console.error(`[${fnName}] All retries exhausted. Giving up.`);
+        throw error;
+      }
+      console.log(`[${fnName}] Retrying in ${delay / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Wait for DB to be ready
+const waitForDB = async (maxAttempts = 30, delay = 3000) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      await db.promise().query('SELECT 1');
+      console.log('✅ Database connection ready');
+      return true;
+    } catch (err) {
+      console.log(`⏳ Waiting for database... (attempt ${i + 1}/${maxAttempts})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Database not available after maximum attempts');
+};
 
 async function generateJobRecommendations() {
     try {
@@ -39,7 +70,7 @@ async function generateJobRecommendations() {
             }
         }
         await Promise.all(insertPromises);
-        console.log("✅ Job recommendations generated (new model in worker).");
+        console.log("✅ Job recommendations generated.");
     } catch (error) {
         console.error("❌ Error generating job recommendations:", error);
     }
@@ -92,18 +123,50 @@ async function generateCandidateRecommendations() {
             }
             await Promise.all(insertPromises);
         }
-        console.log("✅ Candidate recommendations generated (new model in worker).");
+        console.log("✅ Candidate recommendations generated.");
     } catch (error) {
         console.error("❌ Error generating candidate recommendations:", error);
     }
 }
 
-parentPort.on('message', async (message) => {
-    if (message.type === 'generateJobRecommendations') {
-        await generateJobRecommendations();
-        parentPort.postMessage({ type: 'done', function: 'generateJobRecommendations' });
-    } else if (message.type === 'generateCandidateRecommendations') {
-        await generateCandidateRecommendations();
-        parentPort.postMessage({ type: 'done', function: 'generateCandidateRecommendations' });
-    }
-});
+// Main execution loop with proper startup sequence
+const runRecommendations = async () => {
+  try {
+    // Wait for DB to be ready first
+    await waitForDB();
+
+    // Give MySQL a bit more time to be fully operational
+    console.log('⏳ Waiting 12s for MySQL to be fully operational...');
+    await new Promise(resolve => setTimeout(resolve, 12000));
+
+    // Generate job recommendations first (higher priority)
+    await retryWithDelay(
+      generateJobRecommendations,
+      3,
+      5000,
+      'JobRecommendations'
+    );
+
+    // Generate candidate recommendations with retry
+    await retryWithDelay(
+      generateCandidateRecommendations,
+      3,
+      5000,
+      'CandidateRecommendations'
+    );
+
+    console.log('🎉 All recommendations completed!');
+  } catch (error) {
+    console.error('❌ Error in recommendation worker:', error);
+  } finally {
+    process.exit(0);
+  }
+};
+
+module.exports = {
+    generateJobRecommendations,
+    generateCandidateRecommendations,
+    runRecommendations,
+    waitForDB,
+    retryWithDelay,
+};
