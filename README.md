@@ -122,9 +122,7 @@ jobsearch/
 ├── .github/workflows/ci.yml  Backend + Frontend + Docker CI
 ├── docker-compose.yml        Dev stack (api / web / mysql / adminer)
 ├── .env.example
-├── LICENSE                   MIT
-├── CHANGES_REPORT.md         Full changelog
-└── SENIOR_LEVEL_REPORT.md    Roadmap for next-level improvements
+└── LICENSE                   MIT
 ```
 
 ---
@@ -302,7 +300,7 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 
 ## 📈 Roadmap
 
-See [SENIOR_LEVEL_REPORT.md](SENIOR_LEVEL_REPORT.md) for what a 5+ year engineer would add. Top priorities:
+Priorities we'd tackle next:
 
 1. Refresh tokens with rotation
 2. TypeScript migration
