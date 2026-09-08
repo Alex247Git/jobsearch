@@ -121,13 +121,10 @@ jobsearch/
 ├── FrontEnd/                 Vite + React app (Dockerfile + nginx.conf)
 ├── .github/workflows/ci.yml  Backend + Frontend + Docker CI
 ├── docker-compose.yml        Dev stack (api / web / mysql / adminer)
-├── docker-compose.prod.yml   Production overlay (secrets + TLS)
-├── deploy/Caddyfile          TLS edge (automatic Let's Encrypt)
 ├── .env.example
 ├── LICENSE                   MIT
 ├── CHANGES_REPORT.md         Full changelog
-├── SENIOR_LEVEL_REPORT.md    Roadmap for next-level improvements
-├── docs/                   Docker guide (DOCKER.md) + planning notes
+└── SENIOR_LEVEL_REPORT.md    Roadmap for next-level improvements
 ```
 
 ---
@@ -144,8 +141,6 @@ docker compose --profile dev up --build
 
 - Frontend → http://localhost:3000 · Adminer (DB GUI) → http://localhost:8080
 - Demo login: `maria@techcorp.gr` / `Passw0rd!123`
-- Full guide (ports, env vars, troubleshooting, **production TLS**):
-  **[docs/DOCKER.md](docs/DOCKER.md)**
 
 No Docker, or prefer to run services manually? Follow the steps below.
 
@@ -311,7 +306,7 @@ See [SENIOR_LEVEL_REPORT.md](SENIOR_LEVEL_REPORT.md) for what a 5+ year engineer
 
 1. Refresh tokens with rotation
 2. TypeScript migration
-3. ~~Docker compose for the full stack~~ ✅ done — dev stack + production TLS overlay, see [docs/DOCKER.md](docs/DOCKER.md)
+3. ~~Docker compose for the full stack~~ ✅ done — dev stack (api / web / mysql / adminer)
 4. Layered architecture (services + repositories)
 5. Structured logging + Sentry
 

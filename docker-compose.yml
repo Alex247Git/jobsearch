@@ -3,8 +3,6 @@
 # ----------------------------------------------------------------
 # Dev quickstart:   docker compose up --build
 # Dev + Adminer:    docker compose --profile dev up --build
-# Production:       docker compose -f docker-compose.yml \
-#                     -f docker-compose.prod.yml up -d --build
 #
 # All credentials come from environment variables. Docker Compose
 # auto-loads `.env` from this directory; without a `.env` the
@@ -50,8 +48,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-jobsearch}
       # Needed so the `api` container can connect over the compose network
       MYSQL_ROOT_HOST: "%"
-    # Dev convenience only — bound to loopback, never reachable from other
-    # machines. The production overlay removes the host port entirely.
+    # Dev convenience only — bound to loopback, never reachable from other machines.
     ports:
       - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     volumes:
