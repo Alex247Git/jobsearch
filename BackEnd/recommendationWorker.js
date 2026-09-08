@@ -116,6 +116,7 @@ async function generateCandidateRecommendations() {
                             db.promise().execute(`
                                 INSERT INTO recommendations (user_id, job_id, candidate_id, score, recommendation_type, created_at)
                                 VALUES (?, ?, ?, ?, 'candidate', NOW())
+                                ON DUPLICATE KEY UPDATE score = VALUES(score), created_at = NOW()
                             `, [employer.user_id, jobId, candidateId, score])
                         );
                     }
