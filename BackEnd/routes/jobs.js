@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const nlp = require('compromise');
-const { generateCandidateRecommendations } = require('../recommendationSystemNew');
+const { generateCandidateRecommendations } = require('../recommendationWorker');
 const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
 
 // POST new job

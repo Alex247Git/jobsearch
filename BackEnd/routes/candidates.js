@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { generateJobRecommendations } = require('../recommendationSystemNew');
+const { generateJobRecommendations } = require('../recommendationWorker');
 const { authenticateToken, authorizeSelf } = require('../middleware/auth');
 
 // POST candidate
