@@ -1,16 +1,14 @@
 {
-  "name": "ptyxiakh",
+  "name": "jobsearch-platform",
   "version": "1.0.0",
+  "description": "Full-stack job marketplace with AI-powered matching, real-time chat, and production-grade security.",
   "scripts": {
-    "dev": "npm run db:up && npm run start",
-    "start": "concurrently \"npm run backend:start\" \"npm run frontend:start\"",
-    "backend:start": "node BackEnd/server.js",
-    "frontend:start": "cd FrontEnd && npm run dev",
+    "dev": "docker compose up --build",
+    "start": "docker compose up",
     "build": "npm run build:frontend",
     "build:frontend": "cd FrontEnd && npm run build",
-    "db:up": "docker inspect jobsearch-mysql >/dev/null 2>&1 || { echo 'ERROR: MySQL container jobsearch-mysql not found - see README Getting Started.'; exit 1; }; docker start jobsearch-mysql >/dev/null 2>&1 || true; echo 'Waiting for MySQL to accept connections...'; for i in $(seq 1 30); do docker exec jobsearch-mysql mysqladmin ping --silent >/dev/null 2>&1 && { echo 'MySQL is ready.'; exit 0; }; sleep 1; done; echo 'ERROR: MySQL not ready after 30s. Check logs: npm run db:logs'; exit 1",
-    "db:down": "docker stop jobsearch-mysql",
-    "db:logs": "docker logs -f jobsearch-mysql",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f mysql",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "jest BackEnd/server.test.js",
     "test:frontend": "cd FrontEnd && npm test"
@@ -33,11 +31,5 @@
     "concurrently": "^7.6.0",
     "jest": "^29.7.0",
     "supertest": "^6.1.6"
-  },
-  "overrides": {
-    "qs": "^6.16.0",
-    "tar": "^7.5.22",
-    "sharp": "^0.35.0",
-    "adm-zip": "^0.6.0"
   }
 }
