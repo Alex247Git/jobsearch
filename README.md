@@ -26,22 +26,23 @@ A **LinkedIn-style job platform** with two user roles:
 
 What makes it stand out from a typical tutorial project:
 
-| | |
-|---|---|
-| 🤖 **AI semantic matching** | Profile ↔ job similarity via HuggingFace transformers (real ML, not buzzwords) |
-| 💬 **Real-time chat** | Socket.io bidirectional messaging between candidates & employers |
-| 🔐 **Production-grade security** | JWT auth, role-based + resource-based authorization, rate limiting, helmet, audit log |
-| 🧪 **Real tests** | 23 backend (jest, mocked DB) + 7 frontend (vitest) — not boilerplate |
-| 🏗️ **CI/CD** | GitHub Actions: backend tests + frontend tests + production build + docker compose build on every push |
-| 📦 **Clean deps** | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides |
-| 🏎️ **Modern stack** | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express |
-| 🎨 **Polished UI** | Toast notifications, loading skeletons, empty states, smooth micro-interactions |
+|                                  |                                                                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 🤖 **AI semantic matching**      | Profile ↔ job similarity via HuggingFace transformers (real ML, not buzzwords)                         |
+| 💬 **Real-time chat**            | Socket.io bidirectional messaging between candidates & employers                                       |
+| 🔐 **Production-grade security** | JWT auth, role-based + resource-based authorization, rate limiting, helmet, audit log                  |
+| 🧪 **Real tests**                | 23 backend (jest, mocked DB) + 7 frontend (vitest) — not boilerplate                                   |
+| 🏗️ **CI/CD**                     | GitHub Actions: backend tests + frontend tests + production build + docker compose build on every push |
+| 📦 **Clean deps**                | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides             |
+| 🏎️ **Modern stack**              | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express                                           |
+| 🎨 **Polished UI**               | Toast notifications, loading skeletons, empty states, smooth micro-interactions                        |
 
 ---
 
 ## ✨ Features
 
 ### 👤 For candidates
+
 - **4-step registration wizard** (user info → profile → candidate details → ready)
 - **Personalized recommendations** — AI-ranked jobs with match percentage score
 - **Recommendation carousel** — 3-at-a-time slider with golden border highlights
@@ -51,6 +52,7 @@ What makes it stand out from a typical tutorial project:
 - **Rate companies** you've worked with
 
 ### 🏢 For employers
+
 - **Company + job posting** in 4 steps
 - **Applicant dashboard** — see all who applied to your jobs
 - **Accept/reject** applications, **hire** candidates
@@ -59,6 +61,7 @@ What makes it stand out from a typical tutorial project:
 - **Candidate recommendations** based on job requirements
 
 ### 🎨 Modern UX
+
 - **Toast notifications** — non-blocking feedback for all actions
 - **Loading skeletons** — animated placeholders while data loads
 - **Empty states** — helpful messages with CTAs when no data exists
@@ -67,14 +70,33 @@ What makes it stand out from a typical tutorial project:
 - **Responsive design** — works on mobile, tablet, and desktop
 
 ### 🛡️ Security (the "boring" stuff that actually matters)
+
 - **JWT authentication** with role-based authorization (candidate / employer)
-- **Resource ownership** checks (you can only modify *your own* resources — IDOR-safe)
+- **Resource ownership** checks (you can only modify _your own_ resources — IDOR-safe)
 - **Bcrypt** password hashing, never logged
 - **Login rate limiting** (10 attempts / 15 min) + helmet() security headers
 - **Audit log** — every login, failed attempt, and sensitive action recorded
 - **Fail-fast** startup if JWT_SECRET is missing
 - **No password hash leaks** in API responses (only safe fields)
 - **Mass-assignment protection** — clients can't set their own role
+
+---
+
+## 📸 Showcase
+
+Live capture from the running Docker stack — generated with the [Playwright capture script](screenshots/README.md).
+
+| 🏠 Home (Candidate) | 📋 Jobs with AI Matching | 💼 Job Details |
+|:---:|:---:|:---:|
+| ![Home — candidate view with personalized recommendations](docs/screenshots/03-home-candidate.png) | ![Jobs page — filterable listings with AI match scores](docs/screenshots/04-jobs-page.png) | ![Job Details — apply, message employer, save](docs/screenshots/05-job-details.png) |
+
+| 💬 Messages (Real-time Chat) | 👔 Employer Dashboard | 📝 Applicants Management |
+|:---:|:---:|:---:|
+| ![Messages — Socket.io chat between candidate & employer](docs/screenshots/06-messages-page.png) | ![Employer Dashboard — overview of jobs & candidates](docs/screenshots/07-employer-dashboard.png) | ![Applicants — accept/decline pipeline](docs/screenshots/09-applicants.png) |
+
+| 📄 Login Form | 🔙 Home (Not Logged In) | 💼 My Jobs |
+|:---:|:---:|:---:|
+| ![Login — MUI styled form](docs/screenshots/02-login-page.png) | ![Home Not Logged In — public job browsing](docs/screenshots/01-home-not-logged-in.png) | ![My Jobs — employer job management](docs/screenshots/08-my-jobs.png) |
 
 ---
 
@@ -106,15 +128,17 @@ What makes it stand out from a typical tutorial project:
 ```
 
 ### Middleware stack
-| Middleware | Purpose |
-|------------|---------|
-| `authenticateToken` | Verify JWT, attach `req.user` |
-| `authorizeSelf(...params)` | URL param must match authenticated user |
-| `authorizeOwner(param, table, col)` | Lookup resource, verify ownership |
-| `requireRole(...roles)` | Role-based access (e.g. employer-only) |
-| `auditMiddleware` | Capture every request to audit log |
+
+| Middleware                          | Purpose                                 |
+| ----------------------------------- | --------------------------------------- |
+| `authenticateToken`                 | Verify JWT, attach `req.user`           |
+| `authorizeSelf(...params)`          | URL param must match authenticated user |
+| `authorizeOwner(param, table, col)` | Lookup resource, verify ownership       |
+| `requireRole(...roles)`             | Role-based access (e.g. employer-only)  |
+| `auditMiddleware`                   | Capture every request to audit log      |
 
 ### Project structure
+
 ```
 jobsearch/
 ├── BackEnd/                  Express server, routes, middleware
@@ -143,17 +167,20 @@ docker compose --profile dev up --build
 No Docker, or prefer to run services manually? Follow the steps below.
 
 ### Prerequisites
+
 - **Node.js** ≥ 20
 - **MySQL** ≥ 8.0 (or run via Podman / Docker)
 - **npm** ≥ 10
 
 ### 1. Clone
+
 ```bash
 git clone https://github.com/Alex247Git/jobsearch.git
 cd jobsearch
 ```
 
 ### 2. Start MySQL
+
 ```bash
 docker run -d --name jobsearch-mysql -p 127.0.0.1:3306:3306 \
   -e MYSQL_ROOT_PASSWORD=jobsearchrootpass \
@@ -164,6 +191,7 @@ docker run -d --name jobsearch-mysql -p 127.0.0.1:3306:3306 \
 ```
 
 ### 3. Set up environment
+
 ```bash
 cp .env.example .env
 # Edit .env — set the STANDALONE BACKEND section (db.js has no defaults):
@@ -175,6 +203,7 @@ cp .env.example .env
 ```
 
 ### 4. Import schema
+
 ```bash
 docker exec -i jobsearch-mysql mysql -uroot -pjobsearchrootpass jobsearch < schema.sql
 ```
@@ -182,6 +211,7 @@ docker exec -i jobsearch-mysql mysql -uroot -pjobsearchrootpass jobsearch < sche
 ### 5. Install & run
 
 **Backend** (terminal 1) — use `backend:start`, not `npm start`:
+
 ```bash
 npm install
 npm run test:backend   # 23 jest tests with mocked DB
@@ -189,6 +219,7 @@ npm run backend:start  # http://localhost:5000
 ```
 
 **Frontend** (terminal 2):
+
 ```bash
 cd FrontEnd
 npm install
@@ -208,33 +239,33 @@ npm start              # http://localhost:3000
 
 ## 🔑 Demo Accounts
 
-| Email | Password | Role | Use Case |
-|-------|----------|------|----------|
-| eleni.cand@gmail.com | Passw0rd!123 | candidate | Full profile, recommendations, messages |
-| costas.cand@gmail.com | Passw0rd!123 | candidate | Profile with applications |
-| alex.empty@gmail.com | Passw0rd!123 | candidate | Empty states testing |
-| sofi.fresh@gmail.com | Passw0rd!123 | candidate | Profile creation flow |
-| maria@techcorp.gr | Passw0rd!123 | employer | 3 jobs posted |
-| nikos@webflow.gr | Passw0rd!123 | employer | 3 jobs posted |
-| elena@fintech.gr | Passw0rd!123 | employer | 1 job (Data Engineer) |
+| Email                 | Password     | Role      | Use Case                                |
+| --------------------- | ------------ | --------- | --------------------------------------- |
+| eleni.cand@gmail.com  | Passw0rd!123 | candidate | Full profile, recommendations, messages |
+| costas.cand@gmail.com | Passw0rd!123 | candidate | Profile with applications               |
+| alex.empty@gmail.com  | Passw0rd!123 | candidate | Empty states testing                    |
+| sofi.fresh@gmail.com  | Passw0rd!123 | candidate | Profile creation flow                   |
+| maria@techcorp.gr     | Passw0rd!123 | employer  | 3 jobs posted                           |
+| nikos@webflow.gr      | Passw0rd!123 | employer  | 3 jobs posted                           |
+| elena@fintech.gr      | Passw0rd!123 | employer  | 1 job (Data Engineer)                   |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Why |
-|-------|------------|-----|
-| **Frontend** | React 18 + Vite 7 | 5x faster builds than deprecated CRA |
-| **UI library** | MUI 7 + Emotion | Accessible, themeable, production-grade |
-| **Routing** | React Router 6 | De-facto standard |
-| **Real-time** | Socket.io 4 | Battle-tested WebSocket abstraction |
-| **Notifications** | MUI Snackbar + Context | Non-blocking toast system |
-| **Backend** | Express 4 + Node 20 | Simple, ubiquitous, well-supported |
-| **Database** | MySQL 8 | Relational data with strong integrity |
-| **Auth** | jsonwebtoken + bcrypt | Industry standard |
-| **AI/NLP** | @huggingface/transformers | Local embeddings, no API key |
-| **Security** | helmet + express-rate-limit | Headers + brute-force protection |
-| **CI/CD** | GitHub Actions | Free, integrated, fast |
+| Layer             | Technology                  | Why                                     |
+| ----------------- | --------------------------- | --------------------------------------- |
+| **Frontend**      | React 18 + Vite 7           | 5x faster builds than deprecated CRA    |
+| **UI library**    | MUI 7 + Emotion             | Accessible, themeable, production-grade |
+| **Routing**       | React Router 6              | De-facto standard                       |
+| **Real-time**     | Socket.io 4                 | Battle-tested WebSocket abstraction     |
+| **Notifications** | MUI Snackbar + Context      | Non-blocking toast system               |
+| **Backend**       | Express 4 + Node 20         | Simple, ubiquitous, well-supported      |
+| **Database**      | MySQL 8                     | Relational data with strong integrity   |
+| **Auth**          | jsonwebtoken + bcrypt       | Industry standard                       |
+| **AI/NLP**        | @huggingface/transformers   | Local embeddings, no API key            |
+| **Security**      | helmet + express-rate-limit | Headers + brute-force protection        |
+| **CI/CD**         | GitHub Actions              | Free, integrated, fast                  |
 
 ---
 
@@ -242,25 +273,25 @@ npm start              # http://localhost:3000
 
 All authenticated routes expect: `Authorization: Bearer <token>`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/users` | public | Register — returns JWT |
-| `POST` | `/users/login` | public | Login — returns JWT |
-| `GET` | `/users/:id` | self | Get user profile (password stripped) |
-| `PUT` | `/users/:user_id` | self | Update own profile |
-| `GET` | `/jobs` | public | List all jobs |
-| `GET` | `/jobs/:id` | public | Get job details |
-| `POST` | `/jobs` | employer | Post a new job |
-| `GET` | `/recommendations/jobs/:candidate_id` | self | Top matching jobs (AI) |
-| `GET` | `/recommendations/candidates/:userId` | self | Top matching candidates (AI) |
-| `POST` | `/recommendations/generate` | auth | Trigger generation |
-| `GET` | `/recommendations/status` | auth | Check status |
-| `POST` | `/messages` | self | Send message |
-| `GET` | `/messages/conversations/:user_id` | self | Your conversations |
-| `POST` | `/applications` | self | Apply to a job |
-| `POST` | `/saved_jobs` | self | Save a job |
+| Method | Endpoint                              | Auth     | Description                          |
+| ------ | ------------------------------------- | -------- | ------------------------------------ |
+| `POST` | `/users`                              | public   | Register — returns JWT               |
+| `POST` | `/users/login`                        | public   | Login — returns JWT                  |
+| `GET`  | `/users/:id`                          | self     | Get user profile (password stripped) |
+| `PUT`  | `/users/:user_id`                     | self     | Update own profile                   |
+| `GET`  | `/jobs`                               | public   | List all jobs                        |
+| `GET`  | `/jobs/:id`                           | public   | Get job details                      |
+| `POST` | `/jobs`                               | employer | Post a new job                       |
+| `GET`  | `/recommendations/jobs/:candidate_id` | self     | Top matching jobs (AI)               |
+| `GET`  | `/recommendations/candidates/:userId` | self     | Top matching candidates (AI)         |
+| `POST` | `/recommendations/generate`           | auth     | Trigger generation                   |
+| `GET`  | `/recommendations/status`             | auth     | Check status                         |
+| `POST` | `/messages`                           | self     | Send message                         |
+| `GET`  | `/messages/conversations/:user_id`    | self     | Your conversations                   |
+| `POST` | `/applications`                       | self     | Apply to a job                       |
+| `POST` | `/saved_jobs`                         | self     | Save a job                           |
 
-*Self = authenticated + ownership checked against JWT.*
+_Self = authenticated + ownership checked against JWT._
 
 ---
 
@@ -274,12 +305,13 @@ When a candidate registers, their profile is converted to a **vector embedding**
 4. **Top results** — sorted by score, returned with percentage match
 
 ### Triggers
-| Event | Action |
-|-------|--------|
-| Server startup | Generate all recommendations |
-| Profile created/updated | Regenerate for that user |
-| Daily (3 AM) | Refresh all recommendations |
-| Manual | `POST /recommendations/generate` |
+
+| Event                   | Action                           |
+| ----------------------- | -------------------------------- |
+| Server startup          | Generate all recommendations     |
+| Profile created/updated | Regenerate for that user         |
+| Daily (3 AM)            | Refresh all recommendations      |
+| Manual                  | `POST /recommendations/generate` |
 
 The model runs **locally** via ONNX Runtime — no API keys, no per-request costs, no data leaving your server.
 
@@ -289,17 +321,17 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 
 ## 🛡️ Security Posture
 
-| Threat | Status |
-|--------|--------|
-| SQL injection | ✅ Parameterized queries + whitelist in `authorizeOwner` |
-| Password storage | ✅ Bcrypt, never logged, never returned |
-| Brute force | ✅ Login rate limit (10/15min per IP) |
-| IDOR | ✅ Three-layer authz: URL param, body field, resource ownership |
-| XSS | ✅ React default-escapes + helmet headers |
-| Mass assignment | ✅ Role/verification not user-updatable |
-| Secret leak | ✅ `.env` gitignored, fail-fast on startup |
-| CSRF | ✅ N/A (token in header, not cookie) |
-| npm audit | ✅ Backend 0, frontend 0 (pinned to react-router-dom 6.30.3-pre-v6.0) |
+| Threat           | Status                                                                |
+| ---------------- | --------------------------------------------------------------------- |
+| SQL injection    | ✅ Parameterized queries + whitelist in `authorizeOwner`              |
+| Password storage | ✅ Bcrypt, never logged, never returned                               |
+| Brute force      | ✅ Login rate limit (10/15min per IP)                                 |
+| IDOR             | ✅ Three-layer authz: URL param, body field, resource ownership       |
+| XSS              | ✅ React default-escapes + helmet headers                             |
+| Mass assignment  | ✅ Role/verification not user-updatable                               |
+| Secret leak      | ✅ `.env` gitignored, fail-fast on startup                            |
+| CSRF             | ✅ N/A (token in header, not cookie)                                  |
+| npm audit        | ✅ Backend 0, frontend 0 (pinned to react-router-dom 6.30.3-pre-v6.0) |
 
 ---
 
