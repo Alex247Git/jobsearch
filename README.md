@@ -398,6 +398,17 @@ Also part of my portfolio:
 
 **If this helped you, consider giving it a ⭐**
 
+---
+
+## 🤝 Connect with Me
+
+I'm currently open to **full-stack** and **software engineering roles** — remote or hybrid (Greece / EU).
+
+- 📧 [AlexAdamos247@gmail.com](mailto:AlexAdamos247@gmail.com)
+- 💼 [LinkedIn — Alexandros Adamos](https://www.linkedin.com/in/alexandros-adamos-227961331/)
+- 🐙 [GitHub — @Alex247Git](https://github.com/Alex247Git)
+- 🌐 [Portfolio](https://alex247git.github.io/)
+
 Made with ☕ by [Alex247Git](https://github.com/Alex247Git)
 
 </div>
