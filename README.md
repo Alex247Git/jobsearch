@@ -299,6 +299,41 @@ _Self = authenticated + ownership checked against JWT._
 
 When a candidate registers, their profile is converted to a **vector embedding** using the `all-MiniLM-L6-v2` model (a local 90MB sentence-transformer). The same happens for every job posting.
 
+```
+                        JOBSEARCH SEMANTIC MATCHING PIPELINE
+ ┌──────────────┐
+ │   Trigger    │  startup · profile update · daily 3AM · POST /recommendations/generate
+ └──────┬───────┘
+        ▼
+ ┌─────────────────────────────┐      ┌─────────────────────────────┐
+ │  Candidate profile (MySQL)  │      │     Job postings (MySQL)    │
+ │  title, skills, education,  │      │  title, description, type,  │
+ │  certifications, languages  │      │  salary, location, remote   │
+ └──────┬──────────────────────┘      └──────┬──────────────────────┘
+        │ composeText()                       │ composeText()
+        │ "Title: ... Skills: ..."            │ "Title: ... Skills: ..."
+        ▼                                     ▼
+ ┌─────────────────────────────────────────────────────────────────┐
+ │        @huggingface/transformers  ·  Xenova/all-MiniLM-L6-v2    │
+ │        (local ONNX Runtime — 384-dim embeddings, mean pooling)  │
+ └──────┬──────────────────────────────────────┬───────────────────┘
+        │ candidate vector                      │ job vectors
+        ▼                                       ▼
+ ┌─────────────────────────────────────────────────────────────────┐
+ │   Cosine similarity (batch, normalized vectors)                 │
+ │   score = dot(a,b) / (|a|·|b|)                                  │
+ └────────────────────────────┬────────────────────────────────────┘
+                              ▼
+ ┌─────────────────────────────────────────────────────────────────┐
+ │   normalizeScore(): threshold 0.5 → rescale to 0–10             │
+ └────────────────────────────┬────────────────────────────────────┘
+                              ▼
+ ┌─────────────────────────────────────────────────────────────────┐
+ │   MySQL `recommendations` table (ON DUPLICATE KEY upsert)       │
+ │   → served via GET /recommendations (job + candidate side)      │
+ └─────────────────────────────────────────────────────────────────┘
+```
+
 1. **Profile + Job → Embedding** — text converted to 384-dim vector
 2. **Cosine similarity** — between job vector and candidate vector
 3. **Score normalization** — scaled to 0-10 match score
