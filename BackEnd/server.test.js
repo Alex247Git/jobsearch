@@ -3,6 +3,14 @@ const jwt = require('jsonwebtoken');
 
 process.env.JWT_SECRET = 'test-jwt-secret';
 
+// The recommendations route spawns a heavy background worker. In tests we
+// stub it so the POST /recommendations/generate test only verifies the fast
+// "started" response and nothing keeps running after the suite.
+jest.mock('./services/recommendationService', () => ({
+    generateForAll: jest.fn(async () => undefined),
+    getStatus: jest.fn(() => ({ status: 'idle' })),
+}));
+
 // Mock the mysql2 pool so tests never need a live database.
 jest.mock('./db', () => {
     const query = jest.fn();
@@ -221,4 +229,69 @@ test('Should return 404 from authorizeOwner when the resource does not exist', a
         .delete('/applications/999999')
         .set('Authorization', token());
     expect([403, 404]).toContain(response.statusCode);
+});
+
+// =============================================================
+// Sprint 3 — critical-flow integration-style tests (apply / chat /
+// recommendations) on top of the mocked DB
+// =============================================================
+
+test('Should submit an application for a job the candidate has not applied to', async () => {
+    // First query: duplicate-check SELECT returns no existing row.
+    db.promise().query.mockResolvedValueOnce([[]]);
+    // Second query: the INSERT resolves successfully.
+    db.promise().query.mockResolvedValueOnce([{ insertId: 11, affectedRows: 1 }]);
+
+    const response = await request(app)
+        .post('/applications')
+        .send({ job_id: 3, status: 'pending' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body.message).toContain('Application submitted');
+    // The apply endpoint must be server-authoritative about the user.
+    let insertParams = null;
+    for (const call of db.promise().query.mock.calls) {
+        if (call[0].toString().toLowerCase().includes('insert into applications')) {
+            insertParams = call[1];
+        }
+    }
+    expect(insertParams).not.toBeNull();
+    expect(insertParams[0]).toBe(1); // user_id driven by token, not body
+    expect(insertParams[1]).toBe(3); // job_id from body
+});
+
+test('Should reject a duplicate application with 400', async () => {
+    // Duplicate-check SELECT returns an existing row -> 400.
+    db.promise().query.mockResolvedValueOnce([[{ user_id: 1, job_id: 3, status: 'pending' }]]);
+
+    const response = await request(app)
+        .post('/applications')
+        .send({ job_id: 3, status: 'pending' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toContain('already applied');
+});
+
+test('Should return 400 when posting a message without a receiver', async () => {
+    const response = await request(app)
+        .post('/messages')
+        .send({ message: 'hello' }) // missing receiver_id
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toContain('required fields');
+});
+
+test('Should kick off recommendation generation and report started', async () => {
+    // The route responds immediately and runs the heavy work in the background.
+    const response = await request(app)
+        .post('/recommendations/generate')
+        .send({ type: 'all' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.status).toBe('running');
+    expect(response.body.message).toContain('started');
 });
