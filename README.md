@@ -8,7 +8,7 @@
 [![CI Status](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
 [![Backend Audit](https://img.shields.io/badge/Backend_Audit-0_vulns-brightgreen.svg)]()
 [![Frontend Audit](https://img.shields.io/badge/Frontend_Audit-0_vulns-brightgreen.svg)]()
-[![Backend Tests](https://img.shields.io/badge/Tests-23%2F23-brightgreen.svg)]()
+[![Backend Tests](https://img.shields.io/badge/Tests-27%2F27-brightgreen.svg)]()
 [![Frontend Tests](https://img.shields.io/badge/Tests-7%2F7-brightgreen.svg)]()
 
 [Live Demo](#-live-demo) · [Features](#-features) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [Tech Stack](#-tech-stack) · [API](#-api-overview)
@@ -350,6 +350,14 @@ Priorities we'd tackle next:
 MIT — see [LICENSE](LICENSE).
 
 ---
+
+## 🔗 More From Me
+
+Also part of my portfolio:
+
+- 🗺️ [Alumni Career Map](https://github.com/Alex247Git/alumni-career-map) — PHP (Slim) + Leaflet alumni job-mapping platform
+- 🔥 [Autonomous Firefighting Simulation](https://github.com/Alex247Git/autonomous-firefighting-simulation) — Mesa agent-based wildfire simulation in Python
+- 🌐 [Portfolio](https://alex247git.github.io/) — live overview of all my projects
 
 <div align="center">
 
