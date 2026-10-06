@@ -24,7 +24,7 @@ function Messages({ user }) {
     // Fetch conversations only when the logged-in user changes.
     useEffect(() => {
         if (!meId) return;
-        connectSocket(meId);
+        connectSocket();
         apiFetch(`/messages/conversations/${meId}`)
             .then(res => res.json())
             .then(data => setConversations(Array.isArray(data) ? data : []))

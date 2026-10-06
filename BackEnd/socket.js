@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 module.exports = (server, db) => {
     const io = new Server(server, {
@@ -7,39 +8,64 @@ module.exports = (server, db) => {
             methods: ["GET", "POST"]
         }
     });
-    
+
+    // Map: user_id (from the verified JWT) -> socket.id.
     const userSockets = {};
+
+    io.use((socket, next) => {
+        // Handshake auth: the client must present a JWT.
+        // Without this, ANY client could connect and claim any identity
+        // via the old `registerUser` event (identity spoofing).
+        const token = socket.handshake.auth?.token;
+        if (!token) {
+            return next(new Error('Authentication required'));
+        }
+        try {
+            const payload = jwt.verify(token, process.env.JWT_SECRET);
+            // Attach the verified identity — never trust the client payload.
+            socket.userId = payload.user_id;
+            socket.role = payload.role;
+            next();
+        } catch (err) {
+            next(new Error('Invalid token'));
+        }
+    });
+
     io.on('connection', (socket) => {
-        console.log('A user connected:', socket.id);
-        socket.on('registerUser', (userId) => {
-            userSockets[userId] = socket.id;
-            console.log(`User ${userId} connected with socket ID: ${socket.id}`);
-        });
-        socket.on('sendMessage', async (data) => {
-            const { senderId, receiverId, messageContent } = data;
-            const timestamp = new Date();
-            try {
-                const query = `INSERT INTO messages (sender_id, receiver_id, message, sent_at) VALUES (?, ?, ?, NOW())`;
-                await db.promise().query(query, [senderId, receiverId, messageContent]);
-                console.log(`Message saved from ${senderId} to ${receiverId}: "${messageContent}"`);
-                if (userSockets[receiverId]) {
-                    io.to(userSockets[receiverId]).emit('receiveMessage', {
-                        senderId,
-                        messageContent,
-                        timestamp,
-                    });
-                }
-            } catch (err) {
-                console.error('Error saving message:', err.message);
+        console.log('Socket connected:', socket.id, 'user:', socket.userId);
+        userSockets[socket.userId] = socket.id;
+
+        // Legacy event kept for backwards compatibility, but the server
+        // IGNORES the payload — identity comes from the verified JWT only.
+        socket.on('registerUser', () => { /* no-op: identity is socket.userId */ });
+
+        // The socket layer is a RELAY ONLY. It must never write to the
+        // database — persistence is owned by POST /messages (REST),
+        // which validates input, enforces ownership, and writes the
+        // audit log. The socket only forwards the already-saved message
+        // to the receiver's screen in real time.
+        socket.on('sendMessage', (data) => {
+            const { receiver_id, message_id, message, created_at } = data || {};
+            if (!receiver_id) return;
+            const target = userSockets[receiver_id];
+            if (target) {
+                io.to(target).emit('receiveMessage', {
+                    message_id,
+                    sender_id: socket.userId,   // server-authoritative
+                    receiver_id,
+                    message,
+                    created_at,
+                });
             }
         });
+
         socket.on('disconnect', () => {
-            const userId = Object.keys(userSockets).find((key) => userSockets[key] === socket.id);
-            if (userId) {
-                delete userSockets[userId];
-                console.log(`User ${userId} disconnected.`);
+            if (userSockets[socket.userId] === socket.id) {
+                delete userSockets[socket.userId];
             }
+            console.log('Socket disconnected:', socket.id, 'user:', socket.userId);
         });
     });
+
     return io;
 };

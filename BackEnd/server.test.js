@@ -335,9 +335,125 @@ test('Should not let a candidate set the status of their own application to acce
 });
 
 // =============================================================
-// Sprint 3 — critical-flow integration-style tests (apply / chat /
-// recommendations) on top of the mocked DB
+// Sprint 4 — socket authorization tests.
+//
+// The socket layer previously accepted ANY userId from the client
+// with no authentication: registerUser trusted the payload, and
+// sendMessage wrote straight to MySQL from the claimed senderId.
+// These tests assert that a socket connection must present a valid
+// JWT, and that identity comes from the token, never from the event.
 // =============================================================
+
+// Helper: build a socket.io client that connects with a given auth.
+const { io: ioClient } = require('socket.io-client');
+
+const startSocketServer = () => new Promise((resolve) => {
+    const httpServer = require('http').createServer();
+    const initializeSocket = require('./socket');
+    const io = initializeSocket(httpServer, db);
+    httpServer.listen(0, () => {
+        resolve({
+            io,
+            httpServer,
+            port: httpServer.address().port,
+            close: () => new Promise(r => { io.close(); httpServer.close(r); }),
+        });
+    });
+});
+
+const connectClient = (port, auth) => new Promise((resolve, reject) => {
+    const client = ioClient(`http://localhost:${port}`, {
+        auth,
+        transports: ['websocket'],
+        forceNew: true,
+        reconnection: false,
+        timeout: 2000,
+    });
+    const timer = setTimeout(() => { client.close(); reject(new Error('connect timeout')); }, 3000);
+    client.on('connect', () => { clearTimeout(timer); resolve(client); });
+    client.on('connect_error', (err) => { clearTimeout(timer); client.close(); reject(err); });
+});
+
+describe('Socket authorization', () => {
+    let server;
+
+    beforeAll(async () => {
+        server = await startSocketServer();
+    });
+
+    afterAll(async () => {
+        await server.close();
+    });
+
+    beforeEach(() => {
+        db.promise().query.mockReset();
+    });
+
+    test('Should reject a socket connection with no token', async () => {
+        await expect(connectClient(server.port, {}))
+            .rejects.toThrow();
+    });
+
+    test('Should reject a socket connection with an invalid token', async () => {
+        await expect(connectClient(server.port, { token: 'not-a-jwt' }))
+            .rejects.toThrow();
+    });
+
+    test('Should accept a socket connection with a valid token', async () => {
+        const client = await connectClient(server.port, {
+            token: jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET),
+        });
+        expect(client.connected).toBe(true);
+        client.close();
+    });
+
+    test('Should ignore registerUser spoofing and use the token identity', async () => {
+        // Receiver connects with a valid token for user 2.
+        const receiver = await connectClient(server.port, {
+            token: jwt.sign({ user_id: 2, role: 'employer' }, process.env.JWT_SECRET),
+        });
+        const received = [];
+        receiver.on('receiveMessage', (m) => received.push(m));
+
+        // Sender connects with a valid token for user 1, then lies about
+        // its identity via the legacy registerUser event.
+        const sender = await connectClient(server.port, {
+            token: jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET),
+        });
+        sender.emit('registerUser', 999);
+        await new Promise(r => setTimeout(r, 100));
+
+        // REST already persisted this message; the socket only relays it.
+        sender.emit('sendMessage', { receiver_id: 2, message_id: 77, message: 'hi' });
+        await new Promise(r => setTimeout(r, 200));
+
+        expect(received).toHaveLength(1);
+        // server-authoritative: sender is 1 (the verified JWT), never 999.
+        expect(received[0].sender_id).toBe(1);
+        expect(received[0].receiver_id).toBe(2);
+        expect(received[0].message_id).toBe(77);
+
+        sender.close();
+        receiver.close();
+    });
+
+    test('Should never write to the database from the socket layer', async () => {
+        const client = await connectClient(server.port, {
+            token: jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET),
+        });
+
+        client.emit('sendMessage', { senderId: 1, receiverId: 2, messageContent: 'hi' });
+        await new Promise(r => setTimeout(r, 150));
+
+        const insertCall = db.promise().query.mock.calls.find(c =>
+            String(c[0]).toLowerCase().includes('insert into messages')
+        );
+        // The REST route owns persistence. The socket only relays.
+        expect(insertCall).toBeUndefined();
+
+        client.close();
+    });
+});
 
 
 test('Should submit an application for a job the candidate has not applied to', async () => {
