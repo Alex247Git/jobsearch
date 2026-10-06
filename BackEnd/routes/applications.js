@@ -7,16 +7,24 @@ const { logEvent } = require('../audit/auditLog');
 
 // POST new application
 router.post('/', authenticateToken, async (req, res, next) => {
-    const { job_id } = req.body;
+    const { job_id, status } = req.body;
     const user_id = req.user.user_id; // server-authoritative
+
+    // Validate type: a non-numeric job_id would hit MySQL and surface as
+    // a 500 instead of a clean 400.
+    const jid = Number(job_id);
+    if (!Number.isInteger(jid) || jid <= 0) {
+        return res.status(400).json({ error: 'job_id must be a positive integer' });
+    }
+
     // Server-authoritative: the applicant cannot mark their own
     // application as accepted — only an employer can do that later.
-    const status = 'pending';
+    const serverStatus = 'pending';
 
     try {
         const [results] = await db.promise().query(
             'SELECT * FROM applications WHERE user_id = ? AND job_id = ?',
-            [user_id, job_id]
+            [user_id, jid]
         );
         if (results.length > 0) {
             return res.status(400).json({ error: 'You have already applied for this job.' });
@@ -24,7 +32,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
 
         await db.promise().query(
             'INSERT INTO applications (user_id, job_id, status) VALUES (?, ?, ?)',
-            [user_id, job_id, status]
+            [user_id, jid, serverStatus]
         );
         res.status(201).json({ message: 'Application submitted successfully!' });
     } catch (err) {

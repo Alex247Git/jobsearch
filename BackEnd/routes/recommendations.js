@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const { authenticateToken, authorizeSelf } = require('../middleware/auth');
+const authorizeOwner = require('../middleware/authorizeOwner');
 
 router.get("/jobs/:candidate_id", authenticateToken, authorizeSelf("candidate_id"), async (req, res) => {
     const candidate_id = parseInt(req.params.candidate_id);
@@ -79,19 +80,30 @@ router.get('/candidates/:userId', authenticateToken, authorizeSelf('userId'), as
 });
 
 // ✅ PUT - Update recommendation score
-router.put("/:recommendation_id", authenticateToken, async (req, res) => {
+// Ownership: the score is server-generated (AI worker). Only the user
+// whose recommendation this is may touch it, and only with a sane value.
+router.put("/:recommendation_id", authenticateToken, authorizeOwner("recommendation_id", "recommendations", "user_id"), async (req, res) => {
     const { recommendation_id } = req.params;
     const { score } = req.body;
 
-    if (!score) {
-        return res.status(400).json({ error: "Score is required" });
+    // Validate type and range: MySQL would otherwise throw a 500 on a
+    // non-numeric value, and an out-of-range score corrupts the ranking.
+    const n = Number(score);
+    if (score === undefined || score === null || !Number.isFinite(n)) {
+        return res.status(400).json({ error: "Score must be a number" });
+    }
+    if (n < 0 || n > 10) {
+        return res.status(400).json({ error: "Score must be between 0 and 10" });
     }
 
     try {
-        await db.promise().execute(
+        const [result] = await db.promise().execute(
             `UPDATE recommendations SET score = ? WHERE recommendation_id = ?`,
-            [score, recommendation_id]
+            [n, recommendation_id]
         );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Recommendation not found" });
+        }
         res.json({ message: "Recommendation updated" });
     } catch (error) {
         console.error("❌ Error updating recommendation:", error);
@@ -100,14 +112,18 @@ router.put("/:recommendation_id", authenticateToken, async (req, res) => {
 });
 
 // ✅ DELETE - Remove recommendation
-router.delete("/:recommendation_id", authenticateToken, async (req, res) => {
+// Ownership: same rule as PUT — you can only delete your own row.
+router.delete("/:recommendation_id", authenticateToken, authorizeOwner("recommendation_id", "recommendations", "user_id"), async (req, res) => {
     const { recommendation_id } = req.params;
 
     try {
-        await db.promise().execute(
+        const [result] = await db.promise().execute(
             `DELETE FROM recommendations WHERE recommendation_id = ?`,
             [recommendation_id]
         );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Recommendation not found" });
+        }
         res.json({ message: "Recommendation deleted" });
     } catch (error) {
         console.error("❌ Error deleting recommendation:", error);

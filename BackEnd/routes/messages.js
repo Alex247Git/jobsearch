@@ -8,13 +8,18 @@ router.post('/', authenticateToken, async (req, res) => {
     const { receiver_id, message } = req.body;
     const sender_id = req.user.user_id; // server-authoritative
 
-    if (!sender_id || !receiver_id || !message) {
-        return res.status(400).json({ error: 'Please provide all required fields' });
+    if (!message || typeof message !== 'string' || !message.trim()) {
+        return res.status(400).json({ error: 'Message text is required' });
+    }
+    // Validate type: a non-numeric receiver_id would surface as a 500.
+    const rid = Number(receiver_id);
+    if (!Number.isInteger(rid) || rid <= 0) {
+        return res.status(400).json({ error: 'receiver_id must be a positive integer' });
     }
 
     try {
         const query = `INSERT INTO messages (sender_id, receiver_id, message, sent_at) VALUES (?, ?, ?, NOW())`;
-        const [result] = await db.promise().execute(query, [sender_id, receiver_id, message]);
+        const [result] = await db.promise().execute(query, [sender_id, rid, message.trim()]);
 
         if (result.affectedRows === 0) {
             throw new Error("Message was not inserted");

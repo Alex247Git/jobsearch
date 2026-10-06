@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { authenticateToken, authorizeSelf } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validate');
 
 // POST new saved job
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, validateBody({ job_id: 'int' }), async (req, res) => {
     const { job_id } = req.body;
     const user_id = req.user.user_id; // server-authoritative
     const role = req.user.role;

@@ -389,7 +389,96 @@ test('GET /users must not expose every user to any authenticated caller', async 
 
 // =============================================================
 // =============================================================
-// Sprint 4 — server-authoritative registration fields.
+// Sprint 4 — recommendations write-path + input validation.
+// The AI score is server-generated; clients must not be able to set it
+// or delete arbitrary recommendations. Also: numeric inputs are validated
+// so a bad type returns 400, not a 500 from MySQL.
+// =============================================================
+
+test('PUT /recommendations/:id must reject a non-owner', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ recommendation_id: 1, user_id: 9 }]]);
+
+    const response = await request(app)
+        .put('/recommendations/1')
+        .send({ score: 10 })
+        .set('Authorization', token()); // token is user 1, row belongs to 9
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('DELETE /recommendations/:id must reject a non-owner', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ recommendation_id: 1, user_id: 9 }]]);
+
+    const response = await request(app)
+        .delete('/recommendations/1')
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('PUT /recommendations/:id must reject a non-numeric score', async () => {
+    // authorizeOwner aliases the column as `owner_id` — mock it that way.
+    db.promise().query.mockResolvedValueOnce([[{ owner_id: 1 }]]);
+
+    const response = await request(app)
+        .put('/recommendations/1')
+        .send({ score: 'not-a-number' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+});
+
+test('POST /applications must reject a non-numeric job_id', async () => {
+    const response = await request(app)
+        .post('/applications')
+        .send({ job_id: 'not-a-number' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+});
+
+test('POST /messages must reject a non-numeric receiver_id', async () => {
+    const response = await request(app)
+        .post('/messages')
+        .send({ receiver_id: 'abc', message: 'hi' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+});
+
+test('POST /jobs must reject a non-numeric salary', async () => {
+    const response = await request(app)
+        .post('/jobs')
+        .send({ title: 'Dev', salary: 'lots' })
+        .set('Authorization', 'Bearer ' + jwt.sign({ user_id: 1, role: 'employer' }, process.env.JWT_SECRET));
+
+    expect([400, 422]).toContain(response.statusCode);
+});
+
+
+test('POST /saved_jobs must reject a non-numeric job_id', async () => {
+    const response = await request(app)
+        .post('/saved_jobs')
+        .send({ job_id: 'abc' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toMatch(/job_id/);
+});
+
+test('POST /jobs must reject a non-numeric company_id', async () => {
+    const response = await request(app)
+        .post('/jobs')
+        .send({ title: 'Dev', company_id: 'abc', salary: 100, location: 'x',
+                description: 'x', skills_required: 'x', job_type: 'x',
+                remote_option: 'x', category: 'x' })
+        .set('Authorization', 'Bearer ' + jwt.sign({ user_id: 1, role: 'employer' }, process.env.JWT_SECRET));
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toMatch(/company_id/);
+});
+
+
 // A fresh signup must never be pre-verified, regardless of what the
 // client puts in the body (mass assignment).
 // =============================================================
@@ -582,7 +671,9 @@ test('Should return 400 when posting a message without a receiver', async () => 
         .set('Authorization', token());
 
     expect(response.statusCode).toBe(400);
-    expect(response.body.error).toContain('required fields');
+    // The message is now field-specific (400 for a bad receiver_id type),
+    // replacing the older generic "required fields" wording.
+    expect(response.body.error).toMatch(/receiver_id|message/i);
 });
 
 test('Should kick off recommendation generation and report started', async () => {

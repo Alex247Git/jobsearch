@@ -4,14 +4,23 @@ const db = require('../db');
 const nlp = require('compromise');
 const { generateCandidateRecommendations } = require('../recommendationWorker');
 const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validate');
 
 // POST new job
-router.post('/', authenticateToken, requireRole('employer'), async (req, res) => {
+router.post('/', authenticateToken, requireRole('employer'),
+    validateBody({
+        title: 'string',
+        company_id: 'int',
+        salary: 'number',
+        location: 'string',
+        description: 'string',
+        skills_required: 'string',
+        job_type: 'string',
+        remote_option: 'string',
+        category: 'string',
+    }),
+    async (req, res) => {
     const { title, company_id, location, description, salary, skills_required, job_type, remote_option, category } = req.body;
-    const requiredFields = [title, company_id, location, description, salary, skills_required, job_type, remote_option, category];
-    if (requiredFields.some(field => field === undefined || field === null || field === '')) {
-        return res.status(400).json({ error: 'Please provide all required fields' });
-    }
     try {
         const query = `INSERT INTO jobs (title, company_id, location, description, salary, skills_required, job_type, remote_option, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         const [result] = await db.promise().query(query, [title, company_id, location, description, salary, skills_required, job_type, remote_option, category]);
