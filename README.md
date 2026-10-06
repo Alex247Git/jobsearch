@@ -8,7 +8,7 @@
 [![CI Status](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
 [![Backend Audit](https://img.shields.io/badge/Backend_Audit-0_vulns-brightgreen.svg)]()
 [![Frontend Audit](https://img.shields.io/badge/Frontend_Audit-0_vulns-brightgreen.svg)]()
-[![Backend Tests](https://img.shields.io/badge/Tests-27%2F27-brightgreen.svg)]()
+[![Backend Tests](https://img.shields.io/badge/Tests-43%2F43-brightgreen.svg)]()
 [![Frontend Tests](https://img.shields.io/badge/Tests-7%2F7-brightgreen.svg)]()
 
 [Live Demo](#-live-demo) · [Features](#-features) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [Tech Stack](#-tech-stack) · [API](#-api-overview)
@@ -31,7 +31,7 @@ What makes it stand out from a typical tutorial project:
 | 🤖 **AI semantic matching**      | Profile ↔ job similarity via HuggingFace transformers (real ML, not buzzwords)                         |
 | 💬 **Real-time chat**            | Socket.io bidirectional messaging between candidates & employers                                       |
 | 🔐 **Production-grade security** | JWT auth, role-based + resource-based authorization, rate limiting, helmet, audit log                  |
-| 🧪 **Real tests**                | 23 backend (jest, mocked DB) + 7 frontend (vitest) — not boilerplate                                   |
+| 🧪 **Real tests**                | 43 backend (jest, mocked DB) + 7 frontend (vitest) — incl. 16 negative authz tests |
 | 🏗️ **CI/CD**                     | GitHub Actions: backend tests + frontend tests + production build + docker compose build on every push |
 | 📦 **Clean deps**                | 0 npm audit vulnerabilities across backend + frontend, all transitive pinned via overrides             |
 | 🏎️ **Modern stack**              | Vite 7 (5x faster than CRA), React 18, MUI 7, MySQL, Express                                           |
@@ -361,12 +361,36 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 | SQL injection    | ✅ Parameterized queries + whitelist in `authorizeOwner`              |
 | Password storage | ✅ Bcrypt, never logged, never returned                               |
 | Brute force      | ✅ Login rate limit (10/15min per IP)                                 |
-| IDOR             | ✅ Three-layer authz: URL param, body field, resource ownership       |
+| IDOR             | ✅ Ownership enforced on read *and* write routes (see audit below)    |
 | XSS              | ✅ React default-escapes + helmet headers                             |
-| Mass assignment  | ✅ Role/verification not user-updatable                               |
+| Mass assignment  | ✅ `role` / `status` / `sender_id` are server-authoritative           |
+| Socket spoofing  | ✅ JWT required at handshake; identity never read from event payload  |
 | Secret leak      | ✅ `.env` gitignored, fail-fast on startup                            |
 | CSRF             | ✅ N/A (token in header, not cookie)                                  |
 | npm audit        | ✅ Backend 0, frontend 0 (pinned to react-router-dom 6.30.3-pre-v6.0) |
+
+### 📋 Authorization audit — tracked work
+
+A systematic audit of every route (one `grep` pass per HTTP method) found
+several endpoints that authenticated the caller but did not verify
+ownership. **The read-side gaps are fixed and covered by tests:**
+
+- `GET /users/:id`, `GET /profiles/:userId` → `authorizeSelf`
+- `GET /applications`, `GET /messages`, `GET /search_history` → scoped `WHERE`
+- `GET /applications/:application_id` → `authorizeOwner`
+- `GET /users` (bulk) → disabled for non-admin; it previously returned every
+  user's email, phone and date of birth to any authenticated account
+- `POST /applications` → `status` forced to `pending` server-side
+- Socket connections → JWT handshake required, relay-only (no DB writes)
+
+**Still open:** a follow-up audit flagged write routes that authenticate
+without an explicit ownership middleware. Some verify ownership inside the
+handler, the rest need review. Tracked as a follow-up issue — see
+[Roadmap](#-roadmap).
+
+> Every fix above is enforced by a regression test. The backend suite grew
+> from 27 to **43 tests**; 16 of them are negative authorization tests that
+> fail if the check is removed.
 
 ---
 
@@ -374,9 +398,12 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 
 Priorities we'd tackle next:
 
-1. Refresh tokens with rotation
-2. Layered architecture (services + repositories)
-3. Structured logging + Sentry
+1. **Authorization audit on write routes** — the read-side IDOR gaps are
+   closed and regression-tested; the same audit pass over POST/PUT/DELETE
+   is the next piece of work (see [Security Posture](#-security-posture))
+2. Refresh tokens with rotation
+3. Layered architecture (services + repositories)
+4. Structured logging + Sentry
 
 ---
 
