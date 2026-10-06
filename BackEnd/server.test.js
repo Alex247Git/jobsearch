@@ -232,9 +232,113 @@ test('Should return 404 from authorizeOwner when the resource does not exist', a
 });
 
 // =============================================================
+// Sprint 4 — authorization / ownership negative tests.
+// These are the tests that were missing: they assert that a
+// request from the WRONG user is rejected, not just that a
+// request from the RIGHT user succeeds.
+// =============================================================
+
+test('Should reject an update to another users profile (IDOR)', async () => {
+    // Attacker holds a valid token for user_id 1 but targets user_id 2.
+    const attackerToken = 'Bearer ' + jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET);
+
+    const response = await request(app)
+        .put('/users/2')
+        .send({ first_name: 'Hacked' })
+        .set('Authorization', attackerToken);
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('Should reject reading another users profile (IDOR)', async () => {
+    const attackerToken = 'Bearer ' + jwt.sign({ user_id: 1, role: 'candidate' }, process.env.JWT_SECRET);
+
+    const response = await request(app)
+        .get('/users/2')
+        .set('Authorization', attackerToken);
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('Should not let a client escalate its own role via profile update', async () => {
+    // A candidate attempts to promote themselves to employer.
+    const response = await request(app)
+        .put('/users/1')
+        .send({ role: 'employer', is_verified: 1 })
+        .set('Authorization', token());
+
+    // Whether the update succeeds or not, the role must be ignored.
+    // We assert on the SQL actually executed against the DB.
+    const updateCalls = db.promise().query.mock.calls.filter(c =>
+        String(c[0]).toLowerCase().includes('update users set')
+    );
+    updateCalls.forEach(call => {
+        expect(String(call[0]).toLowerCase()).not.toContain('role');
+    });
+});
+
+test('Should not let a candidate accept their own application', async () => {
+    const response = await request(app)
+        .put('/applications/application/1')
+        .set('Authorization', token()); // candidate token
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('GET /applications must scope results to the authenticated user', async () => {
+    db.promise().query.mockResolvedValueOnce([[]]);
+
+    const response = await request(app)
+        .get('/applications')
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(200);
+    const selectCall = db.promise().query.mock.calls.find(c =>
+        String(c[0]).toLowerCase().includes('select') &&
+        String(c[0]).toLowerCase().includes('from applications')
+    );
+    expect(selectCall).toBeDefined();
+    expect(String(selectCall[0]).toLowerCase()).toContain('where');
+});
+
+test('GET /messages must scope results to the authenticated user', async () => {
+    db.promise().query.mockResolvedValueOnce([[]]);
+
+    const response = await request(app)
+        .get('/messages')
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(200);
+    const selectCall = db.promise().query.mock.calls.find(c =>
+        String(c[0]).toLowerCase().includes('from messages')
+    );
+    expect(selectCall).toBeDefined();
+    expect(String(selectCall[0]).toLowerCase()).toContain('where');
+});
+
+test('Should not let a candidate set the status of their own application to accepted', async () => {
+    db.promise().query.mockResolvedValueOnce([[]]); // no existing application
+    db.promise().query.mockResolvedValueOnce([{ insertId: 1, affectedRows: 1 }]);
+
+    const response = await request(app)
+        .post('/applications')
+        .send({ job_id: 3, status: 'accepted' })
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(201);
+    const insertCall = db.promise().query.mock.calls.find(c =>
+        String(c[0]).toLowerCase().includes('insert into applications')
+    );
+    expect(insertCall).toBeDefined();
+    // The stored status must be the server-chosen default, not the client's value.
+    expect(insertCall[1][2]).toBe('pending');
+});
+
+// =============================================================
 // Sprint 3 — critical-flow integration-style tests (apply / chat /
 // recommendations) on top of the mocked DB
 // =============================================================
+
 
 test('Should submit an application for a job the candidate has not applied to', async () => {
     // First query: duplicate-check SELECT returns no existing row.

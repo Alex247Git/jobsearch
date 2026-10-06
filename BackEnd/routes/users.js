@@ -106,7 +106,10 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // **GET USER BY ID**
-router.get('/:id', authenticateToken, async (req, res) => {
+// Ownership: you may only read your own profile. Without this check
+// any authenticated user could enumerate user_ids and harvest emails,
+// phone numbers and dates of birth (IDOR-read).
+router.get('/:id', authenticateToken, authorizeSelf('id'), async (req, res) => {
     const userId = req.params.id;
 
     try {

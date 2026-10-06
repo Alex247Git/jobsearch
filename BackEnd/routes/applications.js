@@ -7,8 +7,11 @@ const { logEvent } = require('../audit/auditLog');
 
 // POST new application
 router.post('/', authenticateToken, async (req, res, next) => {
-    const { job_id, status } = req.body;
+    const { job_id } = req.body;
     const user_id = req.user.user_id; // server-authoritative
+    // Server-authoritative: the applicant cannot mark their own
+    // application as accepted — only an employer can do that later.
+    const status = 'pending';
 
     try {
         const [results] = await db.promise().query(
@@ -32,10 +35,15 @@ router.post('/', authenticateToken, async (req, res, next) => {
     }
 });
 
-// GET all applications
+// GET all applications — scoped to the authenticated user only.
+// Without the WHERE clause this returned every application in the
+// system to any logged-in user (IDOR-read).
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const [results] = await db.promise().query('SELECT * FROM applications');
+        const [results] = await db.promise().query(
+            'SELECT * FROM applications WHERE user_id = ?',
+            [req.user.user_id]
+        );
 
         if (results.length === 0) {
             return res.status(200).json([]);

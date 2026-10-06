@@ -28,10 +28,15 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 
-// GET all messages
+// GET messages — scoped to the authenticated user only.
+// Previously `SELECT * FROM messages` exposed every conversation in
+// the system to any logged-in user (IDOR-read).
 router.get("/", authenticateToken, async (req, res) => {
     try {
-        const [results] = await db.promise().query("SELECT * FROM messages ORDER BY sent_at ASC");
+        const [results] = await db.promise().query(
+            "SELECT * FROM messages WHERE sender_id = ? OR receiver_id = ? ORDER BY sent_at ASC",
+            [req.user.user_id, req.user.user_id]
+        );
 
         if (results.length === 0) {
             return res.status(200).json([]);
