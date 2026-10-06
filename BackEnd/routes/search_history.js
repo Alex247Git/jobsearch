@@ -23,9 +23,14 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // GET all search history entries
+// Scoped to the caller: search history is per-candidate data and must
+// not be readable in bulk by any authenticated user (IDOR-read).
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const [results] = await db.promise().query('SELECT * FROM search_history');
+        const [results] = await db.promise().query(
+            'SELECT * FROM search_history WHERE candidate_id = ?',
+            [req.user.user_id]
+        );
 
         if (results.length === 0) {
             return res.status(200).json([]);

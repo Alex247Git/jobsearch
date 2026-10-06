@@ -148,20 +148,19 @@ router.get('/employer/:user_id', authenticateToken, authorizeSelf('user_id'), as
 
 
 // GET application by application_id
-router.get('/:application_id', authenticateToken, async (req, res) => {
-    const applicationId = req.params.application_id;
-
+// Ownership: an application reveals who applied to which job. Only the
+// applicant (user_id on the row) may read it (IDOR-read).
+router.get('/:application_id', authenticateToken, authorizeOwner('application_id', 'applications', 'user_id'), async (req, res) => {
     try {
-        const query = 'SELECT * FROM applications WHERE application_id = ?';
-        const [results] = await db.promise().query(query, [applicationId]);
-
-        if (results.length === 0) {
-            return res.status(404).json({ error: `Application with ID ${applicationId} not found` });
-        }
+        // authorizeOwner already verified ownership and loaded the row.
+        const [results] = await db.promise().query(
+            'SELECT * FROM applications WHERE application_id = ?',
+            [req.params.application_id]
+        );
 
         res.status(200).json(results[0]);
     } catch (err) {
-        console.error(`Error fetching application with ID ${applicationId}:`, err.message);
+        console.error(`Error fetching application with ID ${req.params.application_id}:`, err.message);
         res.status(500).json({ error: 'Failed to fetch application. Please try again later.' });
     }
 });

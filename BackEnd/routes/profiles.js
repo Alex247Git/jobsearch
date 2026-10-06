@@ -29,7 +29,10 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // GET user profile by user_id
-router.get('/:userId', authenticateToken, async (req, res) => {
+// Ownership: a profile contains a CV, contact details and bio — you may
+// only read your own. Without this check any authenticated user could
+// enumerate user_ids and harvest personal data (IDOR-read).
+router.get('/:userId', authenticateToken, authorizeSelf('userId'), async (req, res) => {
     const userId = req.params.userId;
 
     try {

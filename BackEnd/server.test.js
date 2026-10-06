@@ -93,20 +93,21 @@ test('Should return a 500 status code when deleting a user with foreign key cons
     expect(response.statusCode).toBe(500);
 });
 
-test('Should return a 200 status code when searching for users by name', async () => {
-    db.promise().query.mockResolvedValueOnce([[{ user_id: 1, first_name: 'John' }]]);
+test('Should not list all users by name search (endpoint is closed)', async () => {
     const response = await request(app)
         .get('/users?name=John')
         .set('Authorization', token());
-    expect(response.statusCode).toBe(200);
+    // The bulk user listing endpoint is disabled: it previously dumped
+    // every user's email/phone/DOB to any authenticated account, and the
+    // ?name filter was never actually implemented (no req.query.name).
+    expect(response.statusCode).toBe(403);
 });
 
-test('Should return a 200 status code when retrieving a paginated list of users', async () => {
-    db.promise().query.mockResolvedValueOnce([[{ user_id: 1 }, { user_id: 2 }]]);
+test('Should not return a paginated user list (endpoint is closed)', async () => {
     const response = await request(app)
         .get('/users?page=1&limit=10')
         .set('Authorization', token());
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(403);
 });
 
 test('Should return a token when registering a user', async () => {
@@ -333,6 +334,58 @@ test('Should not let a candidate set the status of their own application to acce
     // The stored status must be the server-chosen default, not the client's value.
     expect(insertCall[1][2]).toBe('pending');
 });
+
+// =============================================================
+// Sprint 4 — remaining ownership gaps found by the systematic
+// grep audit of every GET route that authenticates but does not
+// authorize. Four endpoints still returned rows for any user id.
+// =============================================================
+
+test('GET /profiles/:userId must only return the callers own profile', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ user_id: 1, cv: 'secret.pdf' }]]);
+
+    const response = await request(app)
+        .get('/profiles/2')
+        .set('Authorization', token()); // token is user_id 1
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('GET /search_history must only return the callers own history', async () => {
+    db.promise().query.mockResolvedValueOnce([[]]);
+
+    const response = await request(app)
+        .get('/search_history')
+        .set('Authorization', token());
+
+    expect(response.statusCode).toBe(200);
+    const selectCall = db.promise().query.mock.calls.find(c =>
+        String(c[0]).toLowerCase().includes('from search_history')
+    );
+    expect(selectCall).toBeDefined();
+    expect(String(selectCall[0]).toLowerCase()).toContain('where');
+});
+
+test('GET /applications/:application_id must reject a non-owner', async () => {
+    db.promise().query.mockResolvedValueOnce([[{ application_id: 1, user_id: 9 }]]);
+
+    const response = await request(app)
+        .get('/applications/1')
+        .set('Authorization', token()); // token is user_id 1, row belongs to 9
+
+    expect(response.statusCode).toBe(403);
+});
+
+test('GET /users must not expose every user to any authenticated caller', async () => {
+    const response = await request(app)
+        .get('/users')
+        .set('Authorization', token()); // a candidate token, not an admin
+
+    // The endpoint is closed: no bulk user dump for ordinary accounts.
+    expect(response.statusCode).toBe(403);
+    expect(response.body.error).toMatch(/forbidden/i);
+});
+
 
 // =============================================================
 // Sprint 4 — socket authorization tests.

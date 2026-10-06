@@ -4,7 +4,7 @@ const db = require('../db');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { hashPassword, comparePassword } = require('../authUtils');
-const { authenticateToken, authorizeSelf } = require('../middleware/auth');
+const { authenticateToken, authorizeSelf, requireRole } = require('../middleware/auth');
 const { logEvent } = require('../audit/auditLog');
 
 
@@ -90,19 +90,11 @@ router.post('/login', async (req, res) => {
 });
 
 // **GET ALL USERS**
-router.get('/', authenticateToken, async (req, res) => {
-    try {
-        const [results] = await db.promise().query('SELECT user_id, first_name, last_name, email, phone_number, date_of_birth, is_verified, role FROM users');
-
-        if (results.length === 0) {
-            return res.status(200).json([]);
-        }
-
-        res.status(200).json(results);
-    } catch (err) {
-        console.error('Error fetching users:', err.message);
-        res.status(500).json({ error: 'Failed to fetch users. Please try again later.' });
-    }
+// Previously returned every user — names, emails, phone numbers, dates
+// of birth — to any authenticated account. Nothing in the frontend calls
+// the bare GET /users, so the endpoint is closed rather than guessed at.
+router.get('/', authenticateToken, requireRole('admin'), async (req, res) => {
+    res.status(403).json({ error: 'Forbidden: this endpoint is disabled' });
 });
 
 // **GET USER BY ID**
