@@ -388,6 +388,34 @@ test('GET /users must not expose every user to any authenticated caller', async 
 
 
 // =============================================================
+// =============================================================
+// Sprint 4 — server-authoritative registration fields.
+// A fresh signup must never be pre-verified, regardless of what the
+// client puts in the body (mass assignment).
+// =============================================================
+
+test('Should force is_verified to 0 on signup regardless of client input', async () => {
+    db.promise().query.mockResolvedValueOnce([{ insertId: 42 }]);
+
+    await request(app)
+        .post('/users')
+        .send({
+            first_name: 'Eve', last_name: 'Attacker', email: 'eve@example.com',
+            password: 'secret123', date_of_birth: '1990-01-01',
+            phone_number: '123456',
+            is_verified: 1,          // tries to self-verify
+            role: 'candidate',
+        });
+
+    const insertCall = db.promise().query.mock.calls.find(c =>
+        String(c[0]).toLowerCase().includes('insert into users')
+    );
+    expect(insertCall).toBeDefined();
+    // is_verified is the 7th bound parameter and must always be 0.
+    expect(insertCall[1][6]).toBe(0);
+});
+
+
 // Sprint 4 — socket authorization tests.
 //
 // The socket layer previously accepted ANY userId from the client

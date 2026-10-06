@@ -72,13 +72,13 @@ What makes it stand out from a typical tutorial project:
 ### 🛡️ Security (the "boring" stuff that actually matters)
 
 - **JWT authentication** with role-based authorization (candidate / employer)
-- **Resource ownership** checks (you can only modify _your own_ resources — IDOR-safe)
+- **Resource ownership** checks on read and write paths (see [audit](#-authorization-audit--tracked-work))
 - **Bcrypt** password hashing, never logged
 - **Login rate limiting** (10 attempts / 15 min) + helmet() security headers
-- **Audit log** — every login, failed attempt, and sensitive action recorded
+- **Audit log** — login success/failure, deletions, and all non-2xx responses
 - **Fail-fast** startup if JWT_SECRET is missing
 - **No password hash leaks** in API responses (only safe fields)
-- **Mass-assignment protection** — clients can't set their own role
+- **Mass-assignment protection** — `role` / `is_verified` are accepted at registration only, and never writable through `PUT /users/:id`
 
 ---
 
@@ -105,7 +105,7 @@ Live capture from the running Docker stack — generated with the [Playwright ca
 ```
 ┌─────────────────────────────────────────┐
 │   Frontend (React 18 + Vite 7 + MUI 7)  │
-│   - 16 pages, organized in folders      │
+│   - 24 pages, organized in folders      │
 │   - React Context for auth              │
 │   - Real-time socket.io client          │
 │   - Toast notifications + skeletons     │
@@ -123,7 +123,7 @@ Live capture from the running Docker stack — generated with the [Playwright ca
                  ▼
 ┌─────────────────────────────────────────┐
 │   MySQL 8.0 (rootless Podman / Docker)  │
-│   13 tables, referential integrity      │
+│   15 tables, referential integrity      │
 └─────────────────────────────────────────┘
 ```
 
@@ -214,7 +214,7 @@ docker exec -i jobsearch-mysql mysql -uroot -pjobsearchrootpass jobsearch < sche
 
 ```bash
 npm install
-npm run test:backend   # 23 jest tests with mocked DB
+npm run test:backend   # 43 jest tests with mocked DB
 npm run backend:start  # http://localhost:5000
 ```
 
@@ -231,7 +231,7 @@ npm start              # http://localhost:3000
 
 ## 🧪 Testing
 
-- **Backend**: 23 jest tests with mocked DB (no live MySQL needed)
+- **Backend**: 43 jest tests with mocked DB (no live MySQL needed)
 - **Frontend**: 7 vitest tests across 4 suites (App smoke, JobFilters, JobCard, MessageDialog)
 - **CI**: All of the above + production build, on every push to `main`
 
@@ -361,9 +361,9 @@ Smoke-tested: a frontend resume scores **1.78** vs **0.15** for an unrelated can
 | SQL injection    | ✅ Parameterized queries + whitelist in `authorizeOwner`              |
 | Password storage | ✅ Bcrypt, never logged, never returned                               |
 | Brute force      | ✅ Login rate limit (10/15min per IP)                                 |
-| IDOR             | ✅ Ownership enforced on read *and* write routes (see audit below)    |
+| IDOR             | ⚠️ Read-side fixed + tested; write-side audit in progress            |
 | XSS              | ✅ React default-escapes + helmet headers                             |
-| Mass assignment  | ✅ `role` / `status` / `sender_id` are server-authoritative           |
+| Mass assignment  | ✅ `role` / `status` / `sender_id` server-authoritative after signup  |
 | Socket spoofing  | ✅ JWT required at handshake; identity never read from event payload  |
 | Secret leak      | ✅ `.env` gitignored, fail-fast on startup                            |
 | CSRF             | ✅ N/A (token in header, not cookie)                                  |

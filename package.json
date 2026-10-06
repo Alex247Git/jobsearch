@@ -11,7 +11,8 @@
     "db:logs": "docker compose logs -f mysql",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "jest BackEnd/server.test.js",
-    "test:frontend": "cd FrontEnd && npm test"
+    "test:frontend": "cd FrontEnd && npm test",
+    "backend:start": "node BackEnd/server.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",

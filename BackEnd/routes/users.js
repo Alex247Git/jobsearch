@@ -18,9 +18,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 
 // **REGISTER USER**
+// Server-authoritative: a fresh signup is never pre-verified. Any
+// `is_verified` sent in the body is ignored (mass assignment protection).
 router.post('/', async (req, res) => {
-    const { first_name, last_name, email, password, date_of_birth, phone_number, is_verified, role } = req.body;
-    if (!first_name || !last_name || !email || !password || !date_of_birth || !phone_number || is_verified === undefined || !role) {
+    const { first_name, last_name, email, password, date_of_birth, phone_number, role } = req.body;
+    if (!first_name || !last_name || !email || !password || !date_of_birth || !phone_number || !role) {
         return res.status(400).json({ error: 'Please provide all required fields' });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -28,6 +30,7 @@ router.post('/', async (req, res) => {
     }
     try {
         const hashedPassword = await hashPassword(password);
+        const is_verified = 0;
         const query = `INSERT INTO users (first_name, last_name, email, password, date_of_birth, phone_number, is_verified, role) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         const [result] = await db.promise().query(query, [
@@ -121,9 +124,12 @@ router.get('/:id', authenticateToken, authorizeSelf('id'), async (req, res) => {
 });
 
 // **UPDATE USER**
+// Server-authoritative: `role` and `is_verified` are never added to
+// fieldsToUpdate — a client cannot escalate its own role or verification
+// state through this endpoint (mass assignment protection).
 router.put('/:user_id', authenticateToken, authorizeSelf('user_id'), async (req, res) => {
     const { user_id } = req.params;
-    let { first_name, last_name, email, password, date_of_birth, phone_number, is_verified, role } = req.body;
+    let { first_name, last_name, email, password, date_of_birth, phone_number } = req.body;
 
     if (!user_id) {
         return res.status(400).json({ error: 'User ID is required' });
